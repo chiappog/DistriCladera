@@ -26,8 +26,17 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
           <div key={stat.title} className="flex flex-col gap-4 rounded-xl p-6 bg-white dark:bg-[#1a2634] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-            <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-              <span className="material-symbols-outlined fill" style={{ fontSize: '96px', color: stat.color === 'emerald' ? '#10b981' : stat.color === 'teal' ? '#14b8a6' : '#136dec' }}>
+            <div className="absolute right-0 top-0 p-6 opacity-[0.12] dark:opacity-[0.15] group-hover:opacity-[0.18] dark:group-hover:opacity-[0.25] transition-opacity">
+              <span 
+                className="material-symbols-outlined fill"
+                style={{ 
+                  fontSize: '96px', 
+                  color: stat.color === 'orange' ? '#f97316' : 
+                         stat.color === 'emerald' ? '#10b981' : 
+                         stat.color === 'teal' ? '#14b8a6' : 
+                         '#3b82f6'
+                }}
+              >
                 {stat.icon === 'package_2' ? 'inventory_2' : stat.icon === 'description' ? 'receipt_long' : stat.icon}
               </span>
             </div>
