@@ -16,18 +16,9 @@ const STORAGE_KEY = 'auth_user_id';
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  // Cargar usuario desde localStorage al iniciar
+  // Limpiar localStorage al iniciar para siempre mostrar pantalla de login
   useEffect(() => {
-    const savedUserId = localStorage.getItem(STORAGE_KEY);
-    if (savedUserId) {
-      const foundUser = INITIAL_USERS.find(u => u.id === savedUserId);
-      if (foundUser && foundUser.status) {
-        setUser(foundUser);
-      } else {
-        // Si el usuario guardado no existe o está inactivo, limpiar localStorage
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    }
+    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   const login = (userId: string) => {
