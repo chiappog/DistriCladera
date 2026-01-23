@@ -41,6 +41,11 @@ export interface Client {
   initials: string;
   address: string;
   status: 'Activo' | 'Inactivo' | 'Pendiente';
+  /** Contacto y observaciones (opcionales, no se muestran en la tabla) */
+  phone?: string;
+  email?: string;
+  contactPerson?: string;
+  notes?: string;
 }
 
 export type UserRole = 'Admin' | 'Vendedor' | 'Logística' | 'Facturación';

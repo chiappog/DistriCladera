@@ -1,8 +1,28 @@
-
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { INITIAL_CLIENTS } from '../constants.tsx';
+import type { Client } from '../types';
+import NewClientModal from '../components/NewClientModal';
+
+const matchesSearch = (client: Client, query: string): boolean => {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const id = client.id.toLowerCase();
+  const name = client.name.toLowerCase();
+  const address = client.address.toLowerCase();
+  return id.includes(q) || name.includes(q) || address.includes(q);
+};
 
 const Clients: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [clients, setClients] = useState<Client[]>(INITIAL_CLIENTS);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const abrirModal = useCallback(() => setModalOpen(true), []);
+  const cerrarModal = useCallback(() => setModalOpen(false), []);
+  const agregarClienteATabla = useCallback((client: Client) => {
+    setClients((prev) => [...prev, client]);
+  }, []);
+
   return (
     <div className="container mx-auto max-w-7xl flex flex-col gap-6 animate-in fade-in duration-500">
       <div className="mb-2 flex items-center text-sm">
@@ -25,11 +45,19 @@ const Clients: React.FC = () => {
           </div>
           <input 
             className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg leading-5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition duration-150" 
-            placeholder="Buscar por nombre o código de cliente..." 
-            type="text" 
+            placeholder="Buscar por nombre..." 
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Buscar clientes por nombre, código o dirección"
           />
         </div>
-        <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-5 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95">
+        <button
+          type="button"
+          onClick={abrirModal}
+          id="btnCrearCliente"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-5 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95"
+        >
           <span className="material-symbols-outlined text-[20px]">add</span>
           <span>Crear Cliente</span>
         </button>
@@ -48,8 +76,14 @@ const Clients: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-              {INITIAL_CLIENTS.map((client) => (
-                <tr key={client.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              {clients.map((client) => {
+                const visible = matchesSearch(client, searchQuery);
+                return (
+                <tr
+                  key={client.id}
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  style={{ display: visible ? undefined : 'none' }}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-slate-900 dark:text-white">{client.id}</div>
                   </td>
@@ -87,7 +121,15 @@ const Clients: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
+              {searchQuery.trim() && !clients.some((c) => matchesSearch(c, searchQuery)) && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                    No se encontraron clientes. Probá con otro término.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -107,6 +149,13 @@ const Clients: React.FC = () => {
           </nav>
         </div>
       </div>
+
+      <NewClientModal
+        isOpen={modalOpen}
+        onClose={cerrarModal}
+        clients={clients}
+        onAddClient={agregarClienteATabla}
+      />
     </div>
   );
 };
