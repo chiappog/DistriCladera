@@ -1,8 +1,10 @@
 
 import React from 'react';
-import { INITIAL_AUDIT } from '../constants.tsx';
+import { useAudit } from '../contexts/AuditContext';
 
 const Audit: React.FC = () => {
+  const { auditEntries } = useAudit();
+  
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-6 animate-in fade-in duration-500">
       <nav className="flex mb-2">
@@ -88,7 +90,7 @@ const Audit: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {INITIAL_AUDIT.map((entry) => (
+              {auditEntries.map((entry) => (
                 <tr key={entry.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">

@@ -1,11 +1,21 @@
 
 import React from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   title: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ title }) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a2634] px-8 py-4 sticky top-0 z-10 transition-colors">
       <div className="flex items-center gap-4">
@@ -41,6 +51,15 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
           <button className="flex items-center justify-center rounded-lg size-10 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors">
             <span className="material-symbols-outlined">settings</span>
           </button>
+          {user && (
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center rounded-lg size-10 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-400 transition-colors"
+              title="Cerrar sesión"
+            >
+              <span className="material-symbols-outlined">logout</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

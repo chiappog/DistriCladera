@@ -6,15 +6,15 @@ const Clients: React.FC = () => {
   return (
     <div className="container mx-auto max-w-7xl flex flex-col gap-6 animate-in fade-in duration-500">
       <div className="mb-2 flex items-center text-sm">
-        <a className="text-slate-500 hover:text-slate-700 dark:text-slate-400 font-medium" href="#">Home</a>
+        <a className="text-slate-500 hover:text-slate-700 dark:text-slate-400 font-medium" href="#">Inicio</a>
         <span className="mx-2 text-slate-400">/</span>
-        <span className="text-slate-900 dark:text-white font-medium">Clients</span>
+        <span className="text-slate-900 dark:text-white font-medium">Clientes</span>
       </div>
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
         <div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Client Administration</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-lg">Manage your distributor network and partners.</p>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Administración de Clientes</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-lg">Gestiona tu red de distribuidores y socios.</p>
         </div>
       </div>
 
@@ -25,13 +25,13 @@ const Clients: React.FC = () => {
           </div>
           <input 
             className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg leading-5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition duration-150" 
-            placeholder="Search by name or client code..." 
+            placeholder="Buscar por nombre o código de cliente..." 
             type="text" 
           />
         </div>
         <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-5 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95">
           <span className="material-symbols-outlined text-[20px]">add</span>
-          <span>Create Client</span>
+          <span>Crear Cliente</span>
         </button>
       </div>
 
@@ -40,10 +40,10 @@ const Clients: React.FC = () => {
           <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client Code</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Address</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Código de Cliente</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Nombre</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Dirección</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estado</th>
                 <th className="px-6 py-4"></th>
               </tr>
             </thead>
@@ -69,8 +69,8 @@ const Clients: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      client.status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                      client.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                      client.status === 'Activo' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                      client.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
                       'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
                     }`}>
                       {client.status}
@@ -93,7 +93,7 @@ const Clients: React.FC = () => {
         </div>
         <div className="bg-slate-50 dark:bg-slate-900/50 px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <p className="text-sm text-slate-700 dark:text-slate-400">
-            Showing <span className="font-medium text-slate-900 dark:text-white">1</span> to <span className="font-medium text-slate-900 dark:text-white">5</span> of <span className="font-medium text-slate-900 dark:text-white">124</span> results
+            Mostrando <span className="font-medium text-slate-900 dark:text-white">1</span> a <span className="font-medium text-slate-900 dark:text-white">5</span> de <span className="font-medium text-slate-900 dark:text-white">124</span> resultados
           </p>
           <nav className="inline-flex rounded-md shadow-sm -space-x-px">
             <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700">

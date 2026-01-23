@@ -34,7 +34,7 @@ const Products: React.FC = () => {
           <div className="relative min-w-[140px]">
             <select className="w-full pl-3 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm appearance-none text-slate-700 dark:text-slate-300">
               <option value="">Todas las Unidades</option>
-              <option value="kilo">Kilo</option>
+              <option value="kg">KG</option>
               <option value="unit">Unidad</option>
             </select>
             <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">expand_more</span>
@@ -70,7 +70,7 @@ const Products: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-900 dark:text-white font-semibold text-right">${prod.price.toFixed(2)}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${prod.unit === 'Kilo' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'}`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${prod.unit === 'KG' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'}`}>
                       {prod.unit}
                     </span>
                   </td>
@@ -131,7 +131,7 @@ const Products: React.FC = () => {
                   <div className="flex gap-4 pt-2">
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <input className="w-4 h-4 text-primary border-slate-300 dark:border-slate-600 focus:ring-primary bg-transparent" name="unit" type="radio" defaultChecked />
-                      <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">Kilo</span>
+                      <span className="text-sm text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">KG</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <input className="w-4 h-4 text-primary border-slate-300 dark:border-slate-600 focus:ring-primary bg-transparent" name="unit" type="radio" />

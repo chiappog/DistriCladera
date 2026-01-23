@@ -2,7 +2,16 @@
 export enum OrderStatus {
   PENDIENTE_ARMADO = 'Pendiente de Armado',
   PENDIENTE_FACTURACION = 'Pendiente de Facturación',
-  FACTURADO = 'Facturado'
+  FACTURADO = 'Facturado',
+  ENTREGADO = 'Entregado'
+}
+
+export interface OrderItem {
+  productId: string;
+  estimatedQuantity: number; // Cantidad estimada para KG, cantidad real para Unidad
+  actualWeight?: number; // Peso real en KG, solo para productos por KG, opcional
+  price: number; // Precio unitario
+  unit: 'KG' | 'Unidad'; // Para saber si requiere peso real
 }
 
 export interface Order {
@@ -10,9 +19,12 @@ export interface Order {
   client: string;
   rut?: string;
   date: string;
-  items: number;
-  total: number;
+  items: number; // Mantener para compatibilidad
+  total: number; // Mantener para compatibilidad (usar actualTotal si existe, sino estimatedTotal)
   status: OrderStatus;
+  orderItems: OrderItem[]; // Lista detallada de items
+  estimatedTotal: number; // Total estimado inicial
+  actualTotal?: number; // Total real después de ingresar pesos, opcional
 }
 
 export interface Product {
@@ -20,7 +32,7 @@ export interface Product {
   name: string;
   emoji: string;
   price: number;
-  unit: 'Kilo' | 'Unidad';
+  unit: 'KG' | 'Unidad';
 }
 
 export interface Client {
@@ -28,14 +40,16 @@ export interface Client {
   name: string;
   initials: string;
   address: string;
-  status: 'Active' | 'Inactive' | 'Pending';
+  status: 'Activo' | 'Inactivo' | 'Pendiente';
 }
+
+export type UserRole = 'Admin' | 'Vendedor' | 'Logística' | 'Facturación';
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'Admin' | 'Operario';
+  role: UserRole;
   status: boolean;
   avatar?: string;
 }

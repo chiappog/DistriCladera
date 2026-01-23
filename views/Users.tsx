@@ -8,22 +8,22 @@ const Users: React.FC = () => {
   return (
     <div className="max-w-[1200px] mx-auto flex flex-col gap-6 animate-in fade-in duration-500">
       <nav className="flex items-center text-sm font-medium text-slate-500">
-        <a className="hover:text-primary transition-colors" href="#">Home</a>
+        <a className="hover:text-primary transition-colors" href="#">Inicio</a>
         <span className="mx-2 text-slate-400">/</span>
-        <span className="text-slate-900 dark:text-white">User Management</span>
+        <span className="text-slate-900 dark:text-white">Gestión de Usuarios</span>
       </nav>
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">User Management</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-base">Manage system access, assign roles, and control user statuses.</p>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">Gestión de Usuarios</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-base">Gestiona el acceso al sistema, asigna roles y controla los estados de los usuarios.</p>
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
           className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-sm transition-all hover:shadow-md active:scale-95"
         >
           <span className="material-symbols-outlined text-[20px]">add</span>
-          <span className="font-semibold text-sm">New User</span>
+          <span className="font-semibold text-sm">Nuevo Usuario</span>
         </button>
       </div>
 
@@ -34,18 +34,18 @@ const Users: React.FC = () => {
           </div>
           <input 
             className="block w-full pl-10 pr-3 py-2.5 border-none bg-slate-100 dark:bg-slate-800 rounded-lg text-sm text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-2 focus:ring-primary transition-all" 
-            placeholder="Search users by name, email or role..." 
+            placeholder="Buscar usuarios por nombre, email o rol..." 
             type="text" 
           />
         </div>
         <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 no-scrollbar">
           <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-            All Roles <span className="material-symbols-outlined text-[18px]">arrow_drop_down</span>
+            Todos los Roles <span className="material-symbols-outlined text-[18px]">arrow_drop_down</span>
           </button>
           <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">
-            Status: Active <span className="material-symbols-outlined text-[18px]">arrow_drop_down</span>
+            Estado: Activo <span className="material-symbols-outlined text-[18px]">arrow_drop_down</span>
           </button>
-          <button className="text-primary text-sm font-semibold hover:underline px-2">Clear filters</button>
+          <button className="text-primary text-sm font-semibold hover:underline px-2">Limpiar filtros</button>
         </div>
       </div>
 
@@ -54,10 +54,10 @@ const Users: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">User</th>
-                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Role</th>
-                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
-                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">Actions</th>
+                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Usuario</th>
+                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Rol</th>
+                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Estado</th>
+                <th className="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -73,8 +73,13 @@ const Users: React.FC = () => {
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'Admin' ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'}`}>
-                      {user.role}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      user.role === 'Admin' ? 'bg-primary/10 text-primary border border-primary/20' :
+                      user.role === 'Logística' ? 'bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800' :
+                      user.role === 'Facturación' ? 'bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800' :
+                      'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                    }`}>
+                      {user.role === 'Admin' ? 'Administrador' : user.role}
                     </span>
                   </td>
                   <td className="py-4 px-6">
@@ -82,7 +87,7 @@ const Users: React.FC = () => {
                       <button className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${user.status ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'}`}>
                         <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${user.status ? 'translate-x-5' : 'translate-x-0'}`}></span>
                       </button>
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{user.status ? 'Active' : 'Inactive'}</span>
+                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{user.status ? 'Activo' : 'Inactivo'}</span>
                     </div>
                   </td>
                   <td className="py-4 px-6 text-right">
@@ -101,10 +106,10 @@ const Users: React.FC = () => {
           </table>
         </div>
         <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <p className="text-sm text-slate-500">Showing <span className="font-semibold text-slate-900 dark:text-white">1-3</span> of <span className="font-semibold text-slate-900 dark:text-white">28</span> users</p>
+          <p className="text-sm text-slate-500">Mostrando <span className="font-semibold text-slate-900 dark:text-white">1-3</span> de <span className="font-semibold text-slate-900 dark:text-white">28</span> usuarios</p>
           <div className="flex gap-2">
-            <button className="px-3 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50" disabled>Previous</button>
-            <button className="px-3 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-sm text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800">Next</button>
+            <button className="px-3 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-sm text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50" disabled>Anterior</button>
+            <button className="px-3 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-sm text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800">Siguiente</button>
           </div>
         </div>
       </div>
@@ -118,31 +123,33 @@ const Users: React.FC = () => {
                   <span className="material-symbols-outlined">person_add</span>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Add New User</h3>
-                  <p className="text-sm text-slate-500">Fill in the details to create a new user account.</p>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Agregar Nuevo Usuario</h3>
+                  <p className="text-sm text-slate-500">Completa los detalles para crear una nueva cuenta de usuario.</p>
                 </div>
               </div>
               <form className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Full Name</label>
-                  <input className="mt-1 block w-full rounded-lg border-slate-300 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary text-slate-900 dark:text-white" placeholder="e.g. Jane Doe" type="text" />
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Nombre Completo</label>
+                  <input className="mt-1 block w-full rounded-lg border-slate-300 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary text-slate-900 dark:text-white" placeholder="Ej: Juan Pérez" type="text" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
-                  <input className="mt-1 block w-full rounded-lg border-slate-300 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary text-slate-900 dark:text-white" placeholder="jane@company.com" type="email" />
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Dirección de Email</label>
+                  <input className="mt-1 block w-full rounded-lg border-slate-300 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary text-slate-900 dark:text-white" placeholder="juan@empresa.com" type="email" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Assign Role</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Asignar Rol</label>
                   <select className="mt-1 block w-full rounded-lg border-slate-300 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 shadow-sm focus:border-primary focus:ring-primary text-slate-900 dark:text-white">
-                    <option value="Admin">Administrator (Full Access)</option>
-                    <option value="Operario">Operario (Warehouse Access)</option>
+                    <option value="Admin">Administrador (Acceso Completo)</option>
+                    <option value="Vendedor">Vendedor (Crear y gestionar pedidos)</option>
+                    <option value="Logística">Logística (Armar y entregar pedidos)</option>
+                    <option value="Facturación">Facturación (Facturar pedidos)</option>
                   </select>
                 </div>
               </form>
             </div>
             <div className="bg-slate-50 dark:bg-slate-900/50 p-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
-              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-300 rounded-lg">Cancel</button>
-              <button className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg shadow-md">Create User</button>
+              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-300 rounded-lg">Cancelar</button>
+              <button className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg shadow-md">Crear Usuario</button>
             </div>
           </div>
         </div>

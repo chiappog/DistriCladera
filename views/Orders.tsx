@@ -1,9 +1,101 @@
 
-import React from 'react';
-import { INITIAL_ORDERS } from '../constants.tsx';
+import React, { useState } from 'react';
+import { useOrders } from '../contexts/OrdersContext';
+import { usePermissions } from '../hooks/usePermissions';
+import { useAuth } from '../hooks/useAuth';
+import { useAudit } from '../contexts/AuditContext';
 import { OrderStatus } from '../types.ts';
+import NewOrderModal from '../components/NewOrderModal';
+import StatusBadge from '../components/StatusBadge';
+import WeightInputModal from '../components/WeightInputModal';
 
 const Orders: React.FC = () => {
+  const { orders, changeOrderStatus, updateOrderWeights, hasUnweighedKGProducts, products, deleteOrder } = useOrders();
+  const { canCreateOrder, canEditOrder, canDeleteOrder } = usePermissions();
+  const { user } = useAuth();
+  const { addAuditEntry } = useAudit();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [weightModalOrder, setWeightModalOrder] = useState<{ order: any; targetStatus: OrderStatus } | null>(null);
+
+  const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+    if (!user) return;
+    
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    // Si Logística está cambiando a "Pendiente de Facturación" y hay productos KG sin pesar
+    if (newStatus === OrderStatus.PENDIENTE_FACTURACION && hasUnweighedKGProducts(order)) {
+      // Mostrar modal de ingreso de peso primero
+      setWeightModalOrder({ order, targetStatus: newStatus });
+      return;
+    }
+
+    // Cambio de estado normal
+    const success = changeOrderStatus(
+      orderId,
+      newStatus,
+      user.id,
+      user.name,
+      user.role,
+      addAuditEntry
+    );
+
+    if (!success) {
+      alert('No se pudo cambiar el estado. Verifica tus permisos.');
+    }
+  };
+
+  const handleConfirmWeights = (orderId: string, weights: { [productId: string]: number }, targetStatus: OrderStatus) => {
+    if (!user) return;
+
+    // Actualizar pesos
+    const success = updateOrderWeights(
+      orderId,
+      weights,
+      user.id,
+      user.name,
+      user.role,
+      addAuditEntry
+    );
+
+    if (!success) {
+      alert('No se pudieron actualizar los pesos.');
+      return;
+    }
+
+    // Cerrar modal de peso
+    setWeightModalOrder(null);
+
+    // Cambiar estado después de actualizar pesos
+    changeOrderStatus(
+      orderId,
+      targetStatus,
+      user.id,
+      user.name,
+      user.role,
+      addAuditEntry
+    );
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    if (!user) return;
+
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    // Confirmar eliminación
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar el pedido ${orderId}?\n\nCliente: ${order.client}\nEsta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    deleteOrder(
+      orderId,
+      user.id,
+      user.name,
+      user.role,
+      addAuditEntry
+    );
+  };
   return (
     <div className="max-w-[1200px] mx-auto flex flex-col gap-6 animate-in slide-in-from-right-4 duration-500">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -11,10 +103,15 @@ const Orders: React.FC = () => {
           <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">Pedidos Diarios</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Gestiona y supervisa las órdenes del día.</p>
         </div>
-        <button className="flex items-center justify-center rounded-lg h-10 px-5 bg-primary hover:bg-blue-600 text-white shadow-lg shadow-primary/30 transition-all gap-2 text-sm font-bold active:scale-95">
-          <span className="material-symbols-outlined text-[20px]">add</span>
-          <span>Nueva Orden</span>
-        </button>
+        {canCreateOrder() && (
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center justify-center rounded-lg h-10 px-5 bg-primary hover:bg-blue-600 text-white shadow-lg shadow-primary/30 transition-all gap-2 text-sm font-bold active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[20px]">add</span>
+            <span>Nuevo Pedido</span>
+          </button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-[#1a2634] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -47,6 +144,7 @@ const Orders: React.FC = () => {
                 <option value="armado">Pendiente de Armado</option>
                 <option value="facturacion">Pendiente de Facturación</option>
                 <option value="facturado">Facturado</option>
+                <option value="entregado">Entregado</option>
               </select>
             </div>
           </label>
@@ -70,6 +168,10 @@ const Orders: React.FC = () => {
           <span className="text-emerald-700 dark:text-emerald-400 text-sm font-medium">Facturado</span>
           <span className="bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-bold px-1.5 py-0.5 rounded-md">45</span>
         </button>
+        <button className="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-900/30 px-4 hover:bg-teal-100 transition-colors">
+          <span className="text-teal-700 dark:text-teal-400 text-sm font-medium">Entregado</span>
+          <span className="bg-teal-200 dark:bg-teal-800 text-teal-800 dark:text-teal-200 text-xs font-bold px-1.5 py-0.5 rounded-md">38</span>
+        </button>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-[#1a2634] shadow-sm">
@@ -87,7 +189,7 @@ const Orders: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-gray-800">
-              {INITIAL_ORDERS.map((order) => (
+              {orders.map((order) => (
                 <tr key={order.id} className="group hover:bg-slate-50 dark:hover:bg-gray-800/30 transition-colors">
                   <td className="px-6 py-4 text-primary font-medium">{order.id}</td>
                   <td className="px-6 py-4">
@@ -96,25 +198,62 @@ const Orders: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-slate-500 dark:text-gray-400">{order.date}</td>
                   <td className="px-6 py-4 text-slate-900 dark:text-white">{order.items} items</td>
-                  <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">${order.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${
-                      order.status === OrderStatus.PENDIENTE_ARMADO ? 'bg-orange-50 text-orange-700 border-orange-100 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800' :
-                      order.status === OrderStatus.PENDIENTE_FACTURACION ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800' :
-                      'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
-                    }`}>
-                      <span className={`size-1.5 rounded-full ${
-                        order.status === OrderStatus.PENDIENTE_ARMADO ? 'bg-orange-500' :
-                        order.status === OrderStatus.PENDIENTE_FACTURACION ? 'bg-blue-500' :
-                        'bg-emerald-500'
-                      }`}></span>
-                      {order.status}
-                    </span>
+                    <div className="flex flex-col items-end">
+                      {order.actualTotal !== undefined && order.actualTotal !== null ? (
+                        <>
+                          <span className="font-semibold text-slate-900 dark:text-white">
+                            ${order.actualTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                            Total real
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-semibold text-slate-900 dark:text-white">
+                            ${order.estimatedTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </span>
+                          {hasUnweighedKGProducts(order) ? (
+                            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                              Total parcial - Pendiente pesaje
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400 dark:text-slate-500">
+                              Total estimado
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <StatusBadge
+                      status={order.status}
+                      orderId={order.id}
+                      onStatusChange={(newStatus) => handleStatusChange(order.id, newStatus)}
+                    />
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="inline-flex items-center justify-center size-8 rounded hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-400 transition-colors">
-                      <span className="material-symbols-outlined text-[20px]">visibility</span>
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button className="inline-flex items-center justify-center size-8 rounded hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-400 transition-colors" title="Ver detalles">
+                        <span className="material-symbols-outlined text-[20px]">visibility</span>
+                      </button>
+                      {canEditOrder(order.status) && (
+                        <button className="inline-flex items-center justify-center size-8 rounded hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-400 hover:text-primary transition-colors" title="Editar">
+                          <span className="material-symbols-outlined text-[20px]">edit</span>
+                        </button>
+                      )}
+                      {canDeleteOrder(order.status) && (
+                        <button 
+                          onClick={() => handleDeleteOrder(order.id)}
+                          className="inline-flex items-center justify-center size-8 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors" 
+                          title="Eliminar"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">delete</span>
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -135,6 +274,18 @@ const Orders: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <NewOrderModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      
+      {weightModalOrder && (
+        <WeightInputModal
+          isOpen={true}
+          onClose={() => setWeightModalOrder(null)}
+          order={weightModalOrder.order}
+          products={products}
+          onConfirm={(weights) => handleConfirmWeights(weightModalOrder.order.id, weights, weightModalOrder.targetStatus)}
+        />
+      )}
     </div>
   );
 };

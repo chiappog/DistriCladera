@@ -1,13 +1,19 @@
 
-import React from 'react';
-import { INITIAL_ORDERS } from '../constants.tsx';
+import React, { useState } from 'react';
+import { useOrders } from '../contexts/OrdersContext';
+import { usePermissions } from '../hooks/usePermissions';
 import { OrderStatus } from '../types.ts';
+import NewOrderModal from '../components/NewOrderModal';
 
 const Dashboard: React.FC = () => {
+  const { orders, hasUnweighedKGProducts } = useOrders();
+  const { canCreateOrder } = usePermissions();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const stats = [
     { title: 'Pendiente de Armado', value: 12, label: 'Pedidos en cola', icon: 'package_2', color: 'orange' },
     { title: 'Pendiente Facturación', value: 5, label: 'Requieren atención', icon: 'description', color: 'blue' },
     { title: 'Facturados', value: 28, label: '+12% vs ayer', icon: 'check_circle', color: 'emerald', trending: true },
+    { title: 'Entregados', value: 38, label: 'Completados hoy', icon: 'local_shipping', color: 'teal', trending: true },
   ];
 
   return (
@@ -17,23 +23,28 @@ const Dashboard: React.FC = () => {
         <p className="text-slate-500 dark:text-slate-400 mt-1">Aquí tienes el estado actual de los pedidos diarios.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
           <div key={stat.title} className="flex flex-col gap-4 rounded-xl p-6 bg-white dark:bg-[#1a2634] border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
             <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-              <span className="material-symbols-outlined fill" style={{ fontSize: '96px', color: stat.color === 'emerald' ? '#10b981' : '#136dec' }}>
+              <span className="material-symbols-outlined fill" style={{ fontSize: '96px', color: stat.color === 'emerald' ? '#10b981' : stat.color === 'teal' ? '#14b8a6' : '#136dec' }}>
                 {stat.icon === 'package_2' ? 'inventory_2' : stat.icon === 'description' ? 'receipt_long' : stat.icon}
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${stat.color === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400' : stat.color === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'}`}>
+              <div className={`p-2 rounded-lg ${
+                stat.color === 'orange' ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400' : 
+                stat.color === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 
+                stat.color === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' :
+                'bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400'
+              }`}>
                 <span className="material-symbols-outlined">{stat.icon}</span>
               </div>
               <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">{stat.title}</p>
             </div>
             <div>
               <p className="text-slate-900 dark:text-white text-4xl font-bold tracking-tight">{stat.value}</p>
-              <p className={`${stat.trending ? 'text-emerald-600 dark:text-emerald-400 flex items-center gap-1' : 'text-slate-400 dark:text-slate-500'} text-sm mt-1`}>
+              <p className={`${stat.trending ? (stat.color === 'teal' ? 'text-teal-600 dark:text-teal-400' : 'text-emerald-600 dark:text-emerald-400') + ' flex items-center gap-1' : 'text-slate-400 dark:text-slate-500'} text-sm mt-1`}>
                 {stat.trending && <span className="material-symbols-outlined text-[16px]">trending_up</span>}
                 {stat.label}
               </p>
@@ -52,10 +63,15 @@ const Dashboard: React.FC = () => {
             <span className="material-symbols-outlined text-[20px]">visibility</span>
             <span className="whitespace-nowrap">Ver Pedidos del Día</span>
           </button>
-          <button className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-primary text-white hover:bg-blue-600 gap-2 text-sm font-bold shadow-md shadow-blue-500/20 transition-all">
-            <span className="material-symbols-outlined text-[20px] fill">add</span>
-            <span className="whitespace-nowrap">Nuevo Pedido</span>
-          </button>
+          {canCreateOrder() && (
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-primary text-white hover:bg-blue-600 gap-2 text-sm font-bold shadow-md shadow-blue-500/20 transition-all"
+            >
+              <span className="material-symbols-outlined text-[20px] fill">add</span>
+              <span className="whitespace-nowrap">Nuevo Pedido</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -77,7 +93,7 @@ const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-              {INITIAL_ORDERS.slice(0, 3).map((order) => (
+              {orders.slice(0, 3).map((order) => (
                 <tr key={order.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                   <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{order.id}</td>
                   <td className="px-6 py-4">
@@ -93,17 +109,47 @@ const Dashboard: React.FC = () => {
                     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
                       order.status === OrderStatus.PENDIENTE_ARMADO ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' :
                       order.status === OrderStatus.PENDIENTE_FACTURACION ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
-                      'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                      order.status === OrderStatus.FACTURADO ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' :
+                      'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300'
                     }`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${
                         order.status === OrderStatus.PENDIENTE_ARMADO ? 'bg-orange-500' :
                         order.status === OrderStatus.PENDIENTE_FACTURACION ? 'bg-blue-500' :
-                        'bg-emerald-500'
+                        order.status === OrderStatus.FACTURADO ? 'bg-emerald-500' :
+                        'bg-teal-500'
                       }`}></span>
                       {order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right font-medium text-slate-900 dark:text-white">${order.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex flex-col items-end">
+                      {order.actualTotal !== undefined && order.actualTotal !== null ? (
+                        <>
+                          <span className="font-medium text-slate-900 dark:text-white">
+                            ${order.actualTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                            Total real
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-medium text-slate-900 dark:text-white">
+                            ${order.estimatedTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </span>
+                          {hasUnweighedKGProducts(order) ? (
+                            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                              Total parcial - Pendiente pesaje
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400 dark:text-slate-500">
+                              Total estimado
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 text-center">
                     <button className="text-slate-400 hover:text-primary transition-colors">
                       <span className="material-symbols-outlined text-[20px]">more_vert</span>
@@ -115,6 +161,8 @@ const Dashboard: React.FC = () => {
           </table>
         </div>
       </div>
+      
+      <NewOrderModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };

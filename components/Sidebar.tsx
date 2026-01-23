@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom';
 
 const Sidebar: React.FC = () => {
   const navItems = [
-    { name: 'Dashboard', icon: 'dashboard', path: '/' },
+    { name: 'Panel General', icon: 'dashboard', path: '/' },
     { name: 'Productos', icon: 'inventory_2', path: '/productos' },
     { name: 'Clientes', icon: 'group', path: '/clientes' },
     { name: 'Pedidos', icon: 'shopping_cart', path: '/pedidos' },
@@ -21,7 +21,7 @@ const Sidebar: React.FC = () => {
               <span className="material-symbols-outlined text-primary fill">local_shipping</span>
             </div>
             <div className="flex flex-col">
-              <h1 className="text-slate-900 dark:text-white text-base font-bold leading-tight">Seguimiento</h1>
+              <h1 className="text-slate-900 dark:text-white text-base font-bold leading-tight">DistriCladera</h1>
               <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">Administración</p>
             </div>
           </div>
