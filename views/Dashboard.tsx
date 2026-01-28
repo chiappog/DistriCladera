@@ -1,11 +1,13 @@
 
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../contexts/OrdersContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { OrderStatus } from '../types.ts';
 import NewOrderModal from '../components/NewOrderModal';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { orders, hasUnweighedKGProducts } = useOrders();
   const { canCreateOrder } = usePermissions();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -96,7 +98,10 @@ const Dashboard: React.FC = () => {
           <p className="text-slate-500 dark:text-slate-400 text-sm">Gestiona los pedidos entrantes.</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 gap-2 text-sm font-bold shadow-sm transition-all">
+          <button
+            onClick={() => navigate('/pedidos')}
+            className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 gap-2 text-sm font-bold shadow-sm transition-all"
+          >
             <span className="material-symbols-outlined text-[20px]">visibility</span>
             <span className="whitespace-nowrap">Ver Pedidos del Día</span>
           </button>
