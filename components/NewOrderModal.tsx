@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOrders } from '../contexts/OrdersContext';
+import { useClients } from '../contexts/ClientsContext';
+import { useProducts } from '../contexts/ProductsContext';
 import { useAuth } from '../hooks/useAuth';
 import { useAudit } from '../contexts/AuditContext';
 import { OrderStatus, OrderItem } from '../types';
@@ -10,7 +12,9 @@ interface NewOrderModalProps {
 }
 
 const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
-  const { clients, products, addOrder, orders } = useOrders();
+  const { addOrder, orders } = useOrders();
+  const { clients } = useClients();
+  const { products } = useProducts();
   const { user } = useAuth();
   const { addAuditEntry } = useAudit();
   const [selectedClient, setSelectedClient] = useState('');
@@ -274,7 +278,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
                           <option value="">Seleccionar producto...</option>
                           {products.map((product) => (
                             <option key={product.id} value={product.id}>
-                              {product.emoji} {product.name} - ${product.price.toFixed(2)} / {product.unit}
+                              {product.name} ({product.brand}) - ${product.price.toFixed(2)} / {product.unit}
                             </option>
                           ))}
                         </select>

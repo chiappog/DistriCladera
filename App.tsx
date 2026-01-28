@@ -4,6 +4,9 @@ import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { OrdersProvider } from './contexts/OrdersContext';
 import { AuditProvider } from './contexts/AuditContext';
+import { ProductsProvider } from './contexts/ProductsContext';
+import { ClientsProvider } from './contexts/ClientsContext';
+import { UsersProvider } from './contexts/UsersContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -51,31 +54,37 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <AuditProvider>
-        <OrdersProvider>
-          <HashRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/*"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Routes>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/productos" element={<Products />} />
-                        <Route path="/clientes" element={<Clients />} />
-                        <Route path="/pedidos" element={<Orders />} />
-                        <Route path="/pedidos/:id" element={<OrderDetail />} />
-                        <Route path="/usuarios" element={<Users />} />
-                        <Route path="/auditoria" element={<Audit />} />
-                      </Routes>
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </HashRouter>
-        </OrdersProvider>
+        <ProductsProvider>
+          <ClientsProvider>
+            <UsersProvider>
+              <OrdersProvider>
+                <HashRouter>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route
+                      path="/*"
+                      element={
+                        <ProtectedRoute>
+                          <Layout>
+                            <Routes>
+                              <Route path="/" element={<Dashboard />} />
+                              <Route path="/productos" element={<Products />} />
+                              <Route path="/clientes" element={<Clients />} />
+                              <Route path="/pedidos" element={<Orders />} />
+                              <Route path="/pedidos/:id" element={<OrderDetail />} />
+                              <Route path="/usuarios" element={<Users />} />
+                              <Route path="/auditoria" element={<Audit />} />
+                            </Routes>
+                          </Layout>
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </HashRouter>
+              </OrdersProvider>
+            </UsersProvider>
+          </ClientsProvider>
+        </ProductsProvider>
       </AuditProvider>
     </AuthProvider>
   );

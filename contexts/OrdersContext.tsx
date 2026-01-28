@@ -1,12 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Order, OrderStatus, Client, Product, OrderItem } from '../types';
-import { INITIAL_ORDERS, INITIAL_CLIENTS, INITIAL_PRODUCTS } from '../constants';
+import { Order, OrderStatus, OrderItem } from '../types';
+import { INITIAL_ORDERS } from '../constants';
 import { canChangeStatus } from '../utils/permissions';
 
 interface OrdersContextType {
   orders: Order[];
-  clients: Client[];
-  products: Product[];
   addOrder: (order: Omit<Order, 'id'>, userId: string, userName: string, userRole: string) => void;
   updateOrder: (id: string, order: Partial<Order>, userId: string, userName: string, userRole: string) => void;
   deleteOrder: (id: string, userId: string, userName: string, userRole: string, onAuditLog: (entry: { user: string; role: string; action: string; reference: string; details: string }) => void) => void;
@@ -20,8 +18,6 @@ const OrdersContext = createContext<OrdersContextType | undefined>(undefined);
 
 export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-  const [clients] = useState<Client[]>(INITIAL_CLIENTS);
-  const [products] = useState<Product[]>(INITIAL_PRODUCTS);
 
   const generateOrderId = (): string => {
     const lastOrder = orders[orders.length - 1];
@@ -204,8 +200,6 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   return (
     <OrdersContext.Provider value={{ 
       orders, 
-      clients, 
-      products, 
       addOrder, 
       updateOrder, 
       deleteOrder, 

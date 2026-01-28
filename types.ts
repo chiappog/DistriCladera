@@ -30,7 +30,8 @@ export interface Order {
 export interface Product {
   id: string;
   name: string;
-  emoji: string;
+  brand: string;
+  category: string;
   price: number;
   unit: 'KG' | 'Unidad';
 }

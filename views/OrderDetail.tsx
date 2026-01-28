@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '../contexts/OrdersContext';
+import { useProducts } from '../contexts/ProductsContext';
 import { useAuth } from '../hooks/useAuth';
 import { useAudit } from '../contexts/AuditContext';
 import StatusBadge from '../components/StatusBadge';
@@ -11,7 +12,8 @@ import { OrderStatus } from '../types';
 const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { orders, hasUnweighedKGProducts, products, changeOrderStatus, updateOrderWeights } = useOrders();
+  const { orders, hasUnweighedKGProducts, changeOrderStatus, updateOrderWeights, updateOrder } = useOrders();
+  const { products } = useProducts();
   const { user } = useAuth();
   const { addAuditEntry } = useAudit();
   const [weightModalOrder, setWeightModalOrder] = useState<{ order: any; targetStatus: OrderStatus } | null>(null);
@@ -62,10 +64,26 @@ const OrderDetail: React.FC = () => {
     }
   };
 
-  const handleConfirmWeights = (orderId: string, weights: { [productId: string]: number }, targetStatus: OrderStatus) => {
+  const handleConfirmWeights = (
+    orderId: string,
+    weights: { [productId: string]: number },
+    targetStatus: OrderStatus,
+    quantities?: { [productId: string]: number }
+  ) => {
     if (!user) return;
 
-    // Actualizar pesos
+    const currentOrder = orders.find(o => o.id === orderId);
+    if (currentOrder && quantities && Object.keys(quantities).length > 0) {
+      const newOrderItems = currentOrder.orderItems.map(item => {
+        if (item.unit === 'KG' && quantities[item.productId] !== undefined) {
+          return { ...item, estimatedQuantity: quantities[item.productId] };
+        }
+        return item;
+      });
+      const newItemsCount = newOrderItems.reduce((s, i) => s + i.estimatedQuantity, 0);
+      updateOrder(orderId, { orderItems: newOrderItems, items: newItemsCount }, user.id, user.name, user.role);
+    }
+
     const success = updateOrderWeights(
       orderId,
       weights,
@@ -80,10 +98,8 @@ const OrderDetail: React.FC = () => {
       return;
     }
 
-    // Cerrar modal de peso
     setWeightModalOrder(null);
 
-    // Cambiar estado después de actualizar pesos
     changeOrderStatus(
       orderId,
       targetStatus,
@@ -169,10 +185,14 @@ const OrderDetail: React.FC = () => {
                       <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <span className="text-2xl">{productInfo?.emoji || '📦'}</span>
+                            <div className="size-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-slate-600 dark:text-slate-400">inventory_2</span>
+                            </div>
                             <div>
                               <p className="font-medium text-slate-900 dark:text-white">{productInfo?.name || 'Producto'}</p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">ID: {item.productId}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {productInfo?.brand} • ID: {item.productId}
+                              </p>
                             </div>
                           </div>
                         </td>
@@ -257,7 +277,7 @@ const OrderDetail: React.FC = () => {
           onClose={() => setWeightModalOrder(null)}
           order={weightModalOrder.order}
           products={products}
-          onConfirm={(weights) => handleConfirmWeights(weightModalOrder.order.id, weights, weightModalOrder.targetStatus)}
+          onConfirm={(weights, quantities) => handleConfirmWeights(weightModalOrder.order.id, weights, weightModalOrder.targetStatus, quantities)}
         />
       )}
     </div>
