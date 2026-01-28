@@ -12,6 +12,7 @@ import Dashboard from './views/Dashboard';
 import Products from './views/Products';
 import Clients from './views/Clients';
 import Orders from './views/Orders';
+import OrderDetail from './views/OrderDetail';
 import Users from './views/Users';
 import Audit from './views/Audit';
 
@@ -19,6 +20,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   
   const getTitle = () => {
+    if (location.pathname.startsWith('/pedidos/')) {
+      return 'Detalle del Pedido';
+    }
     switch(location.pathname) {
       case '/': return 'Panel General';
       case '/productos': return 'Gestión de Productos';
@@ -61,6 +65,7 @@ const App: React.FC = () => {
                         <Route path="/productos" element={<Products />} />
                         <Route path="/clientes" element={<Clients />} />
                         <Route path="/pedidos" element={<Orders />} />
+                        <Route path="/pedidos/:id" element={<OrderDetail />} />
                         <Route path="/usuarios" element={<Users />} />
                         <Route path="/auditoria" element={<Audit />} />
                       </Routes>

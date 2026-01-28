@@ -73,7 +73,10 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
         </span>
         {showChangeButton && canChange && (
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsModalOpen(true);
+            }}
             className="text-slate-400 hover:text-primary transition-colors p-1 rounded"
             title="Cambiar estado"
           >

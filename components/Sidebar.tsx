@@ -1,8 +1,10 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const Sidebar: React.FC = () => {
+  const { user } = useAuth();
   const navItems = [
     { name: 'Panel General', icon: 'dashboard', path: '/' },
     { name: 'Productos', icon: 'inventory_2', path: '/productos' },
@@ -57,11 +59,19 @@ const Sidebar: React.FC = () => {
           <div className="flex items-center gap-3">
             <div 
               className="size-9 rounded-full bg-cover bg-center border border-slate-200 dark:border-slate-700" 
-              style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBrprRuyoRqWKijO9YLnmZ8yNmz8EuDrlMAKCBMT3bJyak1YQo0vt5ayS-aQ70xZLidOtbwQbAhkTWd2gun7sC-m933JC2u56v97RZwieGtDH4qDDN30BBFVrsjHlRlM0lusRUhOl9F1LB3OmpkNAQypyvn6e7P1TVQKAbuWpA5E9GgOEy5xhrD1XT8s1vccaySv5vE864EyZ5VjH4a7q-SOKdq9BQnbcJZ2DNaHHl_Pcn3jD66pf5KNFnbQsI3sVZ83RwoU-hGIsaK")' }}
+              style={{ 
+                backgroundImage: user?.avatar 
+                  ? `url("${user.avatar}")` 
+                  : 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBrprRuyoRqWKijO9YLnmZ8yNmz8EuDrlMAKCBMT3bJyak1YQo0vt5ayS-aQ70xZLidOtbwQbAhkTWd2gun7sC-m933JC2u56v97RZwieGtDH4qDDN30BBFVrsjHlRlM0lusRUhOl9F1LB3OmpkNAQypyvn6e7P1TVQKAbuWpA5E9GgOEy5xhrD1XT8s1vccaySv5vE864EyZ5VjH4a7q-SOKdq9BQnbcJZ2DNaHHl_Pcn3jD66pf5KNFnbQsI3sVZ83RwoU-hGIsaK")'
+              }}
             ></div>
             <div className="flex flex-col overflow-hidden">
-              <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">Carlos Ruiz</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 truncate">admin@empresa.com</span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                {user?.name || 'Usuario'}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                {user?.email || ''}
+              </span>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOrders } from '../contexts/OrdersContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../hooks/useAuth';
@@ -10,12 +11,19 @@ import StatusBadge from '../components/StatusBadge';
 import WeightInputModal from '../components/WeightInputModal';
 
 const Orders: React.FC = () => {
+  const navigate = useNavigate();
   const { orders, changeOrderStatus, updateOrderWeights, hasUnweighedKGProducts, products, deleteOrder } = useOrders();
   const { canCreateOrder, canEditOrder, canDeleteOrder } = usePermissions();
   const { user } = useAuth();
   const { addAuditEntry } = useAudit();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [weightModalOrder, setWeightModalOrder] = useState<{ order: any; targetStatus: OrderStatus } | null>(null);
+
+  const handleRowClick = (orderId: string) => {
+    // Remover el # del ID para la URL
+    const id = orderId.replace('#', '');
+    navigate(`/pedidos/${id}`);
+  };
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     if (!user) return;
@@ -190,7 +198,11 @@ const Orders: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-gray-800">
               {orders.map((order) => (
-                <tr key={order.id} className="group hover:bg-slate-50 dark:hover:bg-gray-800/30 transition-colors">
+                <tr 
+                  key={order.id} 
+                  onClick={() => handleRowClick(order.id)}
+                  className="group hover:bg-slate-50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer"
+                >
                   <td className="px-6 py-4 text-primary font-medium">{order.id}</td>
                   <td className="px-6 py-4">
                     <div className="font-medium text-slate-900 dark:text-white">{order.client}</div>
@@ -227,16 +239,20 @@ const Orders: React.FC = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                     <StatusBadge
                       status={order.status}
                       orderId={order.id}
                       onStatusChange={(newStatus) => handleStatusChange(order.id, newStatus)}
                     />
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2">
-                      <button className="inline-flex items-center justify-center size-8 rounded hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-400 transition-colors" title="Ver detalles">
+                      <button 
+                        onClick={() => handleRowClick(order.id)}
+                        className="inline-flex items-center justify-center size-8 rounded hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-400 transition-colors" 
+                        title="Ver detalles"
+                      >
                         <span className="material-symbols-outlined text-[20px]">visibility</span>
                       </button>
                       {canEditOrder(order.status) && (

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useOrders } from '../contexts/OrdersContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { OrderStatus } from '../types.ts';
@@ -9,12 +9,40 @@ const Dashboard: React.FC = () => {
   const { orders, hasUnweighedKGProducts } = useOrders();
   const { canCreateOrder } = usePermissions();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const stats = [
-    { title: 'Pendiente de Armado', value: 12, label: 'Pedidos en cola', icon: 'package_2', color: 'orange' },
-    { title: 'Pendiente Facturación', value: 5, label: 'Requieren atención', icon: 'description', color: 'blue' },
-    { title: 'Facturados', value: 28, label: '+12% vs ayer', icon: 'check_circle', color: 'emerald', trending: true },
-    { title: 'Entregados', value: 38, label: 'Completados hoy', icon: 'local_shipping', color: 'teal', trending: true },
-  ];
+
+  // Calcular estadísticas dinámicamente basadas en todos los pedidos
+  const stats = useMemo(() => [
+    { 
+      title: 'Pendiente de Armado', 
+      value: orders.filter(o => o.status === OrderStatus.PENDIENTE_ARMADO).length,
+      label: 'Pedidos en cola', 
+      icon: 'package_2', 
+      color: 'orange' 
+    },
+    { 
+      title: 'Pendiente Facturación', 
+      value: orders.filter(o => o.status === OrderStatus.PENDIENTE_FACTURACION).length,
+      label: 'Requieren atención', 
+      icon: 'description', 
+      color: 'blue' 
+    },
+    { 
+      title: 'Facturados', 
+      value: orders.filter(o => o.status === OrderStatus.FACTURADO).length,
+      label: 'Completados', 
+      icon: 'check_circle', 
+      color: 'emerald', 
+      trending: true 
+    },
+    { 
+      title: 'Entregados', 
+      value: orders.filter(o => o.status === OrderStatus.ENTREGADO).length,
+      label: 'Completados', 
+      icon: 'local_shipping', 
+      color: 'teal', 
+      trending: true 
+    },
+  ], [orders]);
 
   return (
     <div className="max-w-[1200px] mx-auto flex flex-col gap-8 animate-in fade-in duration-500">
