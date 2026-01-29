@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrders } from '../contexts/OrdersContext';
 import { useProducts } from '../contexts/ProductsContext';
+import { useClients } from '../contexts/ClientsContext';
 import { useAuth } from '../hooks/useAuth';
 import { useAudit } from '../contexts/AuditContext';
 import StatusBadge from '../components/StatusBadge';
 import WeightInputModal from '../components/WeightInputModal';
+import ClientObservationsModal from '../components/ClientObservationsModal';
 import { OrderStatus } from '../types';
 
 const OrderDetail: React.FC = () => {
@@ -14,9 +16,11 @@ const OrderDetail: React.FC = () => {
   const navigate = useNavigate();
   const { orders, hasUnweighedKGProducts, changeOrderStatus, updateOrderWeights, updateOrder } = useOrders();
   const { products } = useProducts();
+  const { clients } = useClients();
   const { user } = useAuth();
   const { addAuditEntry } = useAudit();
   const [weightModalOrder, setWeightModalOrder] = useState<{ order: any; targetStatus: OrderStatus } | null>(null);
+  const [observationsModalOpen, setObservationsModalOpen] = useState(false);
 
   // Remover el # del ID si existe
   const orderId = id?.startsWith('#') ? id : `#${id}`;
@@ -110,6 +114,8 @@ const OrderDetail: React.FC = () => {
     );
   };
 
+  const client = clients.find(c => c.name === order.client);
+
   return (
     <div className="max-w-[1200px] mx-auto flex flex-col gap-6 animate-in slide-in-from-right-4 duration-500">
       <div className="flex items-center gap-4">
@@ -146,9 +152,27 @@ const OrderDetail: React.FC = () => {
                 </div>
               )}
               <div>
+                <span className="text-sm text-slate-500 dark:text-slate-400">Dirección</span>
+                <p className="text-lg font-medium text-slate-900 dark:text-white">
+                  {client?.address ?? '—'}
+                </p>
+              </div>
+              <div>
                 <span className="text-sm text-slate-500 dark:text-slate-400">Fecha</span>
                 <p className="text-lg font-medium text-slate-900 dark:text-white">{order.date}</p>
               </div>
+              {client && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setObservationsModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm font-medium"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">notes</span>
+                    Ver observaciones
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -161,9 +185,10 @@ const OrderDetail: React.FC = () => {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
                   <tr>
-                    <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">Producto</th>
+                    <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">ID</th>
+                    <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">Descripción</th>
                     <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">Cantidad</th>
-                    <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">Precio Unitario</th>
+                    <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">Precio por unidad/KG</th>
                     <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400 text-right">Subtotal</th>
                   </tr>
                 </thead>
@@ -181,25 +206,27 @@ const OrderDetail: React.FC = () => {
                       ? item.estimatedQuantity * item.price
                       : 0;
 
+                    const quantityFormatted = quantity.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                    const quantityUnitLabel = item.unit === 'KG' ? 'kg' : 'unidades';
+                    const priceUnitLabel = item.unit === 'KG' ? 'kg' : 'unidad';
+
                     return (
                       <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="size-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                              <span className="material-symbols-outlined text-slate-600 dark:text-slate-400">inventory_2</span>
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-900 dark:text-white">{productInfo?.name || 'Producto'}</p>
-                              <p className="text-xs text-slate-500 dark:text-slate-400">
-                                {productInfo?.brand} • ID: {item.productId}
-                              </p>
-                            </div>
+                          <span className="font-mono font-semibold text-slate-900 dark:text-white">{item.productId}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-medium text-slate-900 dark:text-white">{productInfo?.name ?? '—'}</p>
+                            {productInfo?.brand && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400">{productInfo.brand}</p>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
                             <span className="font-medium text-slate-900 dark:text-white">
-                              {quantity} {item.unit === 'KG' ? 'kg' : 'unidades'}
+                              {quantityFormatted} {quantityUnitLabel}
                             </span>
                             {item.unit === 'KG' && item.actualWeight === undefined && (
                               <span className="text-xs text-amber-600 dark:text-amber-400">Pendiente pesaje</span>
@@ -207,10 +234,10 @@ const OrderDetail: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                          ${item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })} / {item.unit === 'KG' ? 'kg' : 'unidad'}
+                          ${item.price.toLocaleString('es-ES', { minimumFractionDigits: 2 })} / {priceUnitLabel}
                         </td>
                         <td className="px-6 py-4 text-right font-semibold text-slate-900 dark:text-white">
-                          ${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          ${subtotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
                         </td>
                       </tr>
                     );
@@ -280,6 +307,13 @@ const OrderDetail: React.FC = () => {
           onConfirm={(weights, quantities) => handleConfirmWeights(weightModalOrder.order.id, weights, weightModalOrder.targetStatus, quantities)}
         />
       )}
+
+      <ClientObservationsModal
+        isOpen={observationsModalOpen}
+        onClose={() => setObservationsModalOpen(false)}
+        clientName={order.client}
+        notes={client?.notes}
+      />
     </div>
   );
 };
