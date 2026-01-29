@@ -140,3 +140,24 @@ export const canChangeOrderStatus = (role: UserRole, currentStatus: OrderStatus)
   const transitions = getAvailableStatusTransitions(role, currentStatus);
   return transitions.length > 0;
 };
+
+/**
+ * Verifica si un rol puede marcar/desmarcar el checkbox de logística (artículo listo)
+ */
+export const canToggleLogisticsCheck = (role: UserRole): boolean => {
+  return role === 'Logística' || role === 'Admin';
+};
+
+/**
+ * Verifica si un rol puede marcar/desmarcar el checkbox de facturación (artículo facturado)
+ */
+export const canToggleFacturacionCheck = (role: UserRole): boolean => {
+  return role === 'Facturación' || role === 'Admin';
+};
+
+/**
+ * Verifica si un rol puede marcar/desmarcar el checkbox de admin (verificado)
+ */
+export const canToggleAdminCheck = (role: UserRole): boolean => {
+  return role === 'Admin';
+};

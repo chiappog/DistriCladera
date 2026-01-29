@@ -5,22 +5,28 @@ import { useOrders } from '../contexts/OrdersContext';
 import { useProducts } from '../contexts/ProductsContext';
 import { useClients } from '../contexts/ClientsContext';
 import { useAuth } from '../hooks/useAuth';
+import { usePermissions } from '../hooks/usePermissions';
 import { useAudit } from '../contexts/AuditContext';
 import StatusBadge from '../components/StatusBadge';
 import WeightInputModal from '../components/WeightInputModal';
 import ClientObservationsModal from '../components/ClientObservationsModal';
-import { OrderStatus } from '../types';
+import OrderObservationsModal from '../components/OrderObservationsModal';
+import EditOrderModal from '../components/EditOrderModal';
+import { Order, OrderStatus } from '../types';
 
 const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { orders, hasUnweighedKGProducts, changeOrderStatus, updateOrderWeights, updateOrder } = useOrders();
+  const { orders, hasUnweighedKGProducts, changeOrderStatus, updateOrderWeights, updateOrder, calculateActualTotal } = useOrders();
   const { products } = useProducts();
   const { clients } = useClients();
   const { user } = useAuth();
+  const { canEditOrder, canToggleLogisticsCheck, canToggleFacturacionCheck, canToggleAdminCheck } = usePermissions();
   const { addAuditEntry } = useAudit();
   const [weightModalOrder, setWeightModalOrder] = useState<{ order: any; targetStatus: OrderStatus } | null>(null);
-  const [observationsModalOpen, setObservationsModalOpen] = useState(false);
+  const [clientObservationsModalOpen, setClientObservationsModalOpen] = useState(false);
+  const [orderObservationsModalOpen, setOrderObservationsModalOpen] = useState(false);
+  const [editOrderModalOpen, setEditOrderModalOpen] = useState(false);
 
   // Remover el # del ID si existe
   const orderId = id?.startsWith('#') ? id : `#${id}`;
@@ -116,8 +122,64 @@ const OrderDetail: React.FC = () => {
 
   const client = clients.find(c => c.name === order.client);
 
+  const handleItemCompleted = (itemIndex: number, completed: boolean) => {
+    if (!user) return;
+    const newOrderItems = order.orderItems.map((item, i) =>
+      i === itemIndex ? { ...item, completed } : item
+    );
+    updateOrder(orderId, { orderItems: newOrderItems }, user.id, user.name, user.role);
+  };
+
+  const handleItemBilledByFacturacion = (itemIndex: number, billedByFacturacion: boolean) => {
+    if (!user) return;
+    const newOrderItems = order.orderItems.map((item, i) =>
+      i === itemIndex ? { ...item, billedByFacturacion } : item
+    );
+    updateOrder(orderId, { orderItems: newOrderItems }, user.id, user.name, user.role);
+    addAuditEntry({
+      user: user.name,
+      role: user.role,
+      action: 'Modificado',
+      reference: orderId,
+      details: billedByFacturacion ? 'Facturación marcó artículo como facturado.' : 'Facturación desmarcó artículo como facturado.',
+    });
+  };
+
+  const handleItemVerifiedByAdmin = (itemIndex: number, verifiedByAdmin: boolean) => {
+    if (!user) return;
+    const newOrderItems = order.orderItems.map((item, i) =>
+      i === itemIndex ? { ...item, verifiedByAdmin } : item
+    );
+    updateOrder(orderId, { orderItems: newOrderItems }, user.id, user.name, user.role);
+    addAuditEntry({
+      user: user.name,
+      role: user.role,
+      action: 'Modificado',
+      reference: orderId,
+      details: verifiedByAdmin ? 'Admin verificó artículo del pedido.' : 'Admin desmarcó verificación del artículo.',
+    });
+  };
+
+  const handleSaveEditOrder = (updated: Partial<Order>) => {
+    if (!user) return;
+    const payload: Partial<Order> = { ...updated };
+    if (updated.orderItems) {
+      payload.items = updated.orderItems.reduce((s, i) => s + i.estimatedQuantity, 0);
+      payload.actualTotal = calculateActualTotal(updated.orderItems);
+    }
+    updateOrder(orderId, payload, user.id, user.name, user.role);
+    addAuditEntry({
+      user: user.name,
+      role: user.role,
+      action: 'Modificado',
+      reference: orderId,
+      details: `Pedido modificado. Cliente: ${updated.client ?? order.client}`,
+    });
+    setEditOrderModalOpen(false);
+  };
+
   return (
-    <div className="max-w-[1200px] mx-auto flex flex-col gap-6 animate-in slide-in-from-right-4 duration-500">
+    <div className="max-w-[1200px] mx-auto flex flex-col gap-4 animate-in slide-in-from-right-4 duration-500">
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/pedidos')}
@@ -132,47 +194,74 @@ const OrderDetail: React.FC = () => {
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Detalles del pedido</p>
         </div>
+        {user && canEditOrder(order.status) && (
+          <button
+            type="button"
+            onClick={() => setEditOrderModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+          >
+            <span className="material-symbols-outlined text-[18px]">edit</span>
+            Editar pedido
+          </button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Información Principal */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
+        <div className="lg:col-span-2 flex flex-col gap-4">
           {/* Información del Cliente */}
-          <div className="bg-white dark:bg-[#1a2634] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Información del Cliente</h2>
-            <div className="flex flex-col gap-3">
+          <div className="bg-white dark:bg-[#1a2634] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white mb-3">Información del Cliente</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
               <div>
                 <span className="text-sm text-slate-500 dark:text-slate-400">Cliente</span>
-                <p className="text-lg font-semibold text-slate-900 dark:text-white">{order.client}</p>
+                <p className="text-base font-semibold text-slate-900 dark:text-white">{order.client}</p>
               </div>
               {order.rut && (
                 <div>
                   <span className="text-sm text-slate-500 dark:text-slate-400">RUT</span>
-                  <p className="text-lg font-medium text-slate-900 dark:text-white">{order.rut}</p>
+                  <p className="text-base font-medium text-slate-900 dark:text-white">{order.rut}</p>
                 </div>
               )}
               <div>
                 <span className="text-sm text-slate-500 dark:text-slate-400">Dirección</span>
-                <p className="text-lg font-medium text-slate-900 dark:text-white">
+                <p className="text-base font-medium text-slate-900 dark:text-white">
                   {client?.address ?? '—'}
                 </p>
               </div>
               <div>
                 <span className="text-sm text-slate-500 dark:text-slate-400">Fecha</span>
-                <p className="text-lg font-medium text-slate-900 dark:text-white">{order.date}</p>
+                <p className="text-base font-medium text-slate-900 dark:text-white">{order.date}</p>
               </div>
-              {client && (
-                <div className="pt-2">
+              <div className="sm:col-span-2 pt-1.5 flex flex-wrap gap-2">
+                {client && (
                   <button
                     type="button"
-                    onClick={() => setObservationsModalOpen(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm font-medium"
+                    onClick={() => setClientObservationsModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-sm font-medium"
                   >
-                    <span className="material-symbols-outlined text-[18px]">notes</span>
-                    Ver observaciones
+                    <span className="material-symbols-outlined text-[18px]">person</span>
+                    Observaciones del cliente
                   </button>
-                </div>
-              )}
+                )}
+                <button
+                  type="button"
+                  onClick={() => setOrderObservationsModalOpen(true)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                    order.notes?.trim()
+                      ? 'bg-primary text-white hover:bg-blue-600 shadow-md shadow-primary/25 dark:shadow-primary/20'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {order.notes?.trim() ? 'note' : 'description'}
+                  </span>
+                  Observaciones del pedido
+                  {order.notes?.trim() && (
+                    <span className="size-2 rounded-full bg-white/90 shrink-0" aria-hidden />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -185,9 +274,22 @@ const OrderDetail: React.FC = () => {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
                   <tr>
+                    <th className="px-2 py-3 w-10 text-center" title="Artículo listo por logística">
+                      <span className="sr-only">Logística</span>
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Log.</span>
+                    </th>
+                    <th className="px-2 py-3 w-10 text-center" title="Artículo facturado">
+                      <span className="sr-only">Facturación</span>
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Fact.</span>
+                    </th>
+                    <th className="px-2 py-3 w-10 text-center" title="Verificado por admin: coincide con lo facturado">
+                      <span className="sr-only">Admin</span>
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Admin</span>
+                    </th>
                     <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">ID</th>
                     <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">Descripción</th>
                     <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">Cantidad</th>
+                    <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">Peso (kg)</th>
                     <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400">Precio por unidad/KG</th>
                     <th className="px-6 py-3 font-semibold text-slate-500 dark:text-slate-400 text-right">Subtotal</th>
                   </tr>
@@ -195,23 +297,62 @@ const OrderDetail: React.FC = () => {
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                   {order.orderItems.map((item, index) => {
                     const productInfo = products.find(p => p.id === item.productId);
-                    
-                    const quantity = item.unit === 'KG' 
-                      ? (item.actualWeight !== undefined && item.actualWeight !== null ? item.actualWeight : item.estimatedQuantity)
-                      : item.estimatedQuantity;
-                    
-                    const subtotal = item.unit === 'KG' && item.actualWeight !== undefined && item.actualWeight !== null
+                    const quantityFormatted = item.estimatedQuantity.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                    const quantityUnitLabel = item.unit === 'KG' ? '' : 'unidades';
+                    const subtotal = item.unit === 'KG' && item.actualWeight != null && item.actualWeight > 0
                       ? item.actualWeight * item.price
                       : item.unit === 'Unidad'
                       ? item.estimatedQuantity * item.price
                       : 0;
-
-                    const quantityFormatted = quantity.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-                    const quantityUnitLabel = item.unit === 'KG' ? 'kg' : 'unidades';
+                    const hasWeight = item.unit === 'KG' && item.actualWeight != null && item.actualWeight > 0;
                     const priceUnitLabel = item.unit === 'KG' ? 'kg' : 'unidad';
 
+                    const canLogistics = user && canToggleLogisticsCheck();
+                    const canFacturacion = user && canToggleFacturacionCheck();
+                    const canAdmin = user && canToggleAdminCheck();
+
                     return (
-                      <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                      <tr
+                        key={index}
+                        className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors ${
+                          item.completed ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''
+                        } ${item.billedByFacturacion ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''} ${
+                          item.verifiedByAdmin ? 'bg-violet-50/50 dark:bg-violet-900/10' : ''
+                        }`}
+                      >
+                        <td className="px-2 py-4 w-10 text-center align-middle">
+                          <input
+                            type="checkbox"
+                            checked={item.completed ?? false}
+                            onChange={(e) => handleItemCompleted(index, e.target.checked)}
+                            disabled={!canLogistics}
+                            title={canLogistics ? (item.completed ? 'Marcar como pendiente' : 'Artículo listo por logística') : 'Sin permiso'}
+                            aria-label={item.completed ? 'Marcar como pendiente (logística)' : 'Marcar como completado (logística)'}
+                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 disabled:opacity-50"
+                          />
+                        </td>
+                        <td className="px-2 py-4 w-10 text-center align-middle">
+                          <input
+                            type="checkbox"
+                            checked={item.billedByFacturacion ?? false}
+                            onChange={(e) => handleItemBilledByFacturacion(index, e.target.checked)}
+                            disabled={!canFacturacion}
+                            title={canFacturacion ? (item.billedByFacturacion ? 'Desmarcar como facturado' : 'Marcar como facturado') : 'Sin permiso'}
+                            aria-label={item.billedByFacturacion ? 'Desmarcar como facturado' : 'Marcar como facturado'}
+                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 disabled:opacity-50"
+                          />
+                        </td>
+                        <td className="px-2 py-4 w-10 text-center align-middle">
+                          <input
+                            type="checkbox"
+                            checked={item.verifiedByAdmin ?? false}
+                            onChange={(e) => handleItemVerifiedByAdmin(index, e.target.checked)}
+                            disabled={!canAdmin}
+                            title={canAdmin ? (item.verifiedByAdmin ? 'Desmarcar verificación' : 'Verificado por admin') : 'Sin permiso'}
+                            aria-label={item.verifiedByAdmin ? 'Desmarcar verificación admin' : 'Verificado por admin'}
+                            className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 dark:border-slate-600 dark:bg-slate-700 disabled:opacity-50"
+                          />
+                        </td>
                         <td className="px-6 py-4">
                           <span className="font-mono font-semibold text-slate-900 dark:text-white">{item.productId}</span>
                         </td>
@@ -224,20 +365,24 @@ const OrderDetail: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-medium text-slate-900 dark:text-white">
-                              {quantityFormatted} {quantityUnitLabel}
-                            </span>
-                            {item.unit === 'KG' && item.actualWeight === undefined && (
-                              <span className="text-xs text-amber-600 dark:text-amber-400">Pendiente pesaje</span>
-                            )}
-                          </div>
+                          <span className="font-medium text-slate-900 dark:text-white">
+                            {quantityFormatted}{quantityUnitLabel ? ` ${quantityUnitLabel}` : ''}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
+                          {item.unit === 'KG'
+                            ? (item.actualWeight != null && item.actualWeight > 0
+                                ? item.actualWeight.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+                                : '—')
+                            : '—'}
                         </td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
                           ${item.price.toLocaleString('es-ES', { minimumFractionDigits: 2 })} / {priceUnitLabel}
                         </td>
                         <td className="px-6 py-4 text-right font-semibold text-slate-900 dark:text-white">
-                          ${subtotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
+                          {item.unit === 'KG' && !hasWeight
+                            ? <span className="text-amber-600 dark:text-amber-400">Pendiente</span>
+                            : `$${subtotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })}`}
                         </td>
                       </tr>
                     );
@@ -249,7 +394,7 @@ const OrderDetail: React.FC = () => {
         </div>
 
         {/* Panel Lateral */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {/* Estado y Resumen */}
           <div className="bg-white dark:bg-[#1a2634] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Estado</h2>
@@ -309,10 +454,35 @@ const OrderDetail: React.FC = () => {
       )}
 
       <ClientObservationsModal
-        isOpen={observationsModalOpen}
-        onClose={() => setObservationsModalOpen(false)}
+        isOpen={clientObservationsModalOpen}
+        onClose={() => setClientObservationsModalOpen(false)}
         clientName={order.client}
         notes={client?.notes}
+      />
+
+      <OrderObservationsModal
+        isOpen={orderObservationsModalOpen}
+        onClose={() => setOrderObservationsModalOpen(false)}
+        orderId={order.id}
+        notes={order.notes}
+        onSave={(notes) => {
+          if (!user) return;
+          updateOrder(orderId, { notes }, user.id, user.name, user.role);
+          addAuditEntry({
+            user: user.name,
+            role: user.role,
+            action: 'Modificado',
+            reference: orderId,
+            details: 'Observaciones del pedido actualizadas.',
+          });
+        }}
+      />
+
+      <EditOrderModal
+        isOpen={editOrderModalOpen}
+        onClose={() => setEditOrderModalOpen(false)}
+        order={order}
+        onSave={handleSaveEditOrder}
       />
     </div>
   );

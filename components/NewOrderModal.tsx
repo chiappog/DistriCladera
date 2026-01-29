@@ -109,9 +109,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
       }
       const product = products.find(p => p.id === item.productId);
       if (item.estimatedQuantity <= 0) {
-        newErrors[`quantity_${index}`] = product && product.unit === 'KG' 
-          ? 'Debes ingresar la cantidad de unidades (ej: 3 quesos)'
-          : 'La cantidad debe ser mayor a 0';
+        newErrors[`quantity_${index}`] = 'La cantidad debe ser mayor a 0';
       }
     });
     
@@ -289,24 +287,29 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
                       
                       <div className="w-32">
                         <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">
-                          {product && product.unit === 'KG' ? 'Cantidad (unidades)' : 'Cantidad'}
+                          Cantidad
                         </label>
                         <input
                           type="number"
-                          min="1"
-                          step="1"
-                          value={item.estimatedQuantity || ''}
-                          onChange={(e) => handleProductChange(index, 'estimatedQuantity', parseInt(e.target.value) || 0)}
+                          min={product && product.unit === 'KG' ? 0.1 : 1}
+                          step={product && product.unit === 'KG' ? 0.1 : 1}
+                          value={item.estimatedQuantity ?? ''}
+                          onChange={(e) => {
+                            const product = products.find(p => p.id === orderItems[index].productId);
+                            const raw = e.target.value;
+                            const num = product?.unit === 'KG' ? (parseFloat(raw) || 0) : (parseInt(raw, 10) || 0);
+                            handleProductChange(index, 'estimatedQuantity', num);
+                          }}
                           className={`w-full px-3 py-2 bg-white dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-slate-900 dark:text-white ${
                             errors[`quantity_${index}`] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                           }`}
-                          placeholder={product && product.unit === 'KG' ? 'Ej: 3' : ''}
+                          placeholder={product && product.unit === 'KG' ? 'Ej: 1,5' : ''}
                         />
                         {errors[`quantity_${index}`] && (
                           <p className="text-xs text-red-500 mt-1">{errors[`quantity_${index}`]}</p>
                         )}
                         {product && product.unit === 'KG' && (
-                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">El peso será ingresado por Logística</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Peso (kg) se ingresa al preparar/facturar</p>
                         )}
                       </div>
                       
