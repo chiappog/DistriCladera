@@ -56,9 +56,15 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ isOpen, onClose, order,
     setOrderItems(orderItems.filter((_, i) => i !== index));
   };
 
-  const handleProductChange = (index: number, field: keyof OrderItem, value: string | number) => {
+  const handleProductChange = (index: number, field: keyof OrderItem, value: string | number | undefined) => {
     const updatedItems = [...orderItems];
-    updatedItems[index] = { ...updatedItems[index], [field]: value };
+    if (value === undefined && field === 'actualWeight') {
+      const next = { ...updatedItems[index] };
+      delete next.actualWeight;
+      updatedItems[index] = next;
+    } else {
+      updatedItems[index] = { ...updatedItems[index], [field]: value };
+    }
     
     if (field === 'productId') {
       const product = products.find(p => p.id === value);
@@ -84,11 +90,15 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ isOpen, onClose, order,
     }
     
     orderItems.forEach((item, index) => {
+      const product = products.find(p => p.id === item.productId);
       if (!item.productId) {
         newErrors[`product_${index}`] = 'Debes seleccionar un producto';
       }
       if (item.estimatedQuantity <= 0) {
         newErrors[`quantity_${index}`] = 'La cantidad debe ser mayor a 0';
+      }
+      if (product?.unit === 'KG' && item.actualWeight !== undefined && item.actualWeight !== null && item.actualWeight <= 0) {
+        newErrors[`weight_${index}`] = 'El peso debe ser mayor a 0';
       }
     });
     
@@ -108,7 +118,10 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ isOpen, onClose, order,
       estimatedQuantity: item.estimatedQuantity,
       price: item.price,
       unit: item.unit,
-      ...(item.actualWeight !== undefined && { actualWeight: item.actualWeight }),
+      ...(item.actualWeight != null && item.actualWeight > 0 && { actualWeight: item.actualWeight }),
+      ...(item.completed !== undefined && { completed: item.completed }),
+      ...(item.billedByFacturacion !== undefined && { billedByFacturacion: item.billedByFacturacion }),
+      ...(item.verifiedByAdmin !== undefined && { verifiedByAdmin: item.verifiedByAdmin }),
     }));
 
     onSave({
@@ -251,23 +264,56 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ isOpen, onClose, order,
                         </select>
                         {errors[`product_${index}`] && <p className="text-xs text-red-500 mt-1">{errors[`product_${index}`]}</p>}
                       </div>
-                      <div className="w-32">
-                        <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">
-                          {product && product.unit === 'KG' ? 'Cantidad (unidades)' : 'Cantidad'}
-                        </label>
+                      <div className="w-28">
+                        <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Cantidad</label>
                         <input
                           type="number"
-                          min="1"
-                          step="1"
-                          value={item.estimatedQuantity || ''}
-                          onChange={(e) => handleProductChange(index, 'estimatedQuantity', parseInt(e.target.value) || 0)}
+                          min={product?.unit === 'KG' ? 0.1 : 1}
+                          step={product?.unit === 'KG' ? 0.1 : 1}
+                          value={item.estimatedQuantity ?? ''}
+                          onChange={(e) => {
+                            const val = product?.unit === 'KG' ? (parseFloat(e.target.value) || 0) : (parseInt(e.target.value, 10) || 0);
+                            handleProductChange(index, 'estimatedQuantity', val);
+                          }}
                           className={`w-full px-3 py-2 bg-white dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-slate-900 dark:text-white ${
                             errors[`quantity_${index}`] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                           }`}
                         />
                         {errors[`quantity_${index}`] && <p className="text-xs text-red-500 mt-1">{errors[`quantity_${index}`]}</p>}
                       </div>
-                      <div className="w-32 flex items-end">
+                      {product && product.unit === 'KG' && (
+                        <div className="w-28">
+                          <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Peso (kg)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={item.actualWeight ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0);
+                              handleProductChange(index, 'actualWeight', val);
+                            }}
+                            placeholder="—"
+                            className={`w-full px-3 py-2 bg-white dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-slate-900 dark:text-white ${
+                              errors[`weight_${index}`] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
+                            }`}
+                          />
+                          {errors[`weight_${index}`] && <p className="text-xs text-red-500 mt-1">{errors[`weight_${index}`]}</p>}
+                        </div>
+                      )}
+                      {product && product.unit === 'KG' && (
+                        <div className="w-28 flex flex-col justify-end">
+                          <span className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Subtotal</span>
+                          {item.actualWeight != null && item.actualWeight > 0 ? (
+                            <span className="px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-semibold text-slate-900 dark:text-white">
+                              ${(item.actualWeight * item.price).toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-sm font-semibold text-amber-700 dark:text-amber-400">Pendiente</span>
+                          )}
+                        </div>
+                      )}
+                      <div className="w-10 flex items-end shrink-0">
                         <button
                           type="button"
                           onClick={() => handleRemoveProduct(index)}

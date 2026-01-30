@@ -49,7 +49,7 @@ const WeightInputModal: React.FC<WeightInputModalProps> = ({
   };
 
   const handleQuantityChange = (productId: string, value: string) => {
-    const numValue = Math.max(1, Math.floor(parseFloat(value) || 1));
+    const numValue = Math.max(0.1, parseFloat(value) || 0.1);
     setQuantities(prev => ({ ...prev, [productId]: numValue }));
   };
 
@@ -159,15 +159,15 @@ const WeightInputModal: React.FC<WeightInputModalProps> = ({
                       <div className="col-span-2">
                         <input
                           type="number"
-                          min="1"
-                          step="1"
+                          min="0.1"
+                          step="0.1"
                           value={qty}
                           onChange={(e) => handleQuantityChange(item.productId, e.target.value)}
                           className={`${inputClass} text-center ${
                             errors[`qty-${item.productId}`] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                           }`}
                         />
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 text-center">unidades</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 text-center">cantidad pedida</p>
                       </div>
                       <div className="col-span-2">
                         <input
