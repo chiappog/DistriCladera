@@ -2,23 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { INITIAL_USERS } from '../constants';
-import { User } from '../types';
+import { getDefaultRouteForRole } from '../utils/views';
 
 const Login: React.FC = () => {
   const [selectedUserId, setSelectedUserId] = useState('');
   const [error, setError] = useState('');
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-  // Navegar cuando el usuario se autentique
+  // Navegar cuando el usuario se autentique (a la ruta por defecto de su rol)
   useEffect(() => {
-    if (isAuthenticated) {
-      // Usar setTimeout para asegurar que el estado se actualice
+    if (isAuthenticated && user) {
+      const defaultRoute = getDefaultRouteForRole(user.role);
       setTimeout(() => {
-        navigate('/', { replace: true });
+        navigate(defaultRoute, { replace: true });
       }, 100);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
