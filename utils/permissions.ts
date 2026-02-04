@@ -1,38 +1,40 @@
 import { UserRole, OrderStatus } from '../types';
 
 /**
- * Verifica si un rol puede crear pedidos
+ * Matriz de permisos - Crear pedido: Vendedor ✅, Logística ❌, Facturación ✅, Admin ✅
  */
 export const canCreateOrder = (role: UserRole): boolean => {
-  return role === 'Admin' || role === 'Vendedor';
+  return role === 'Admin' || role === 'Vendedor' || role === 'Facturación';
 };
 
 /**
- * Verifica si un rol puede editar un pedido según su estado
+ * Matriz de permisos - Editar pedido (no facturado): Vendedor ✅, Logística ✅, Facturación ❌, Admin ✅
  */
 export const canEditOrder = (role: UserRole, status: OrderStatus): boolean => {
   if (role === 'Admin') return true;
-  if (role === 'Vendedor') {
-    // Vendedor solo puede editar si NO está facturado ni entregado
+  if (role === 'Facturación') return false;
+  if (role === 'Vendedor' || role === 'Logística') {
     return status !== OrderStatus.FACTURADO && status !== OrderStatus.ENTREGADO;
   }
   return false;
 };
 
 /**
- * Verifica si un rol puede eliminar un pedido según su estado
+ * Matriz de permisos - Eliminar pedido (no facturado): Vendedor ✅, Logística ❌, Facturación ❌, Admin ✅
  */
 export const canDeleteOrder = (role: UserRole, status: OrderStatus): boolean => {
   if (role === 'Admin') return true;
   if (role === 'Vendedor') {
-    // Vendedor solo puede eliminar si NO está facturado ni entregado
     return status !== OrderStatus.FACTURADO && status !== OrderStatus.ENTREGADO;
   }
   return false;
 };
 
 /**
- * Verifica si un rol puede cambiar de un estado a otro
+ * Matriz de permisos - Cambios de estado:
+ * - Pendiente Facturación: Solo Logística, Admin
+ * - Facturado: Solo Facturación, Admin
+ * - Entregado: Solo Logística, Admin
  */
 export const canChangeStatus = (
   role: UserRole,
@@ -40,42 +42,21 @@ export const canChangeStatus = (
   newStatus: OrderStatus
 ): boolean => {
   if (role === 'Admin') return true;
+  if (role === 'Vendedor') return false;
 
-  // Logística puede cambiar: Pendiente de Armado <-> Pendiente de Facturación
+  // Logística: Pendiente Armado <-> Pendiente Facturación; Facturado <-> Entregado
   if (role === 'Logística') {
-    if (currentStatus === OrderStatus.PENDIENTE_ARMADO && 
-        newStatus === OrderStatus.PENDIENTE_FACTURACION) {
-      return true;
-    }
-    // Logística puede revertir: Pendiente de Facturación -> Pendiente de Armado
-    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION && 
-        newStatus === OrderStatus.PENDIENTE_ARMADO) {
-      return true;
-    }
-    // Logística puede cambiar: Facturado -> Entregado
-    if (currentStatus === OrderStatus.FACTURADO && 
-        newStatus === OrderStatus.ENTREGADO) {
-      return true;
-    }
-    // Logística puede revertir: Entregado -> Facturado
-    if (currentStatus === OrderStatus.ENTREGADO && 
-        newStatus === OrderStatus.FACTURADO) {
-      return true;
-    }
+    if (currentStatus === OrderStatus.PENDIENTE_ARMADO && newStatus === OrderStatus.PENDIENTE_FACTURACION) return true;
+    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION && newStatus === OrderStatus.PENDIENTE_ARMADO) return true;
+    if (currentStatus === OrderStatus.FACTURADO && newStatus === OrderStatus.ENTREGADO) return true;
+    if (currentStatus === OrderStatus.ENTREGADO && newStatus === OrderStatus.FACTURADO) return true;
     return false;
   }
 
-  // Facturación puede cambiar: Pendiente de Facturación <-> Facturado
+  // Facturación: Solo Pendiente Facturación <-> Facturado
   if (role === 'Facturación') {
-    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION && 
-        newStatus === OrderStatus.FACTURADO) {
-      return true;
-    }
-    // Facturación puede revertir: Facturado -> Pendiente de Facturación
-    if (currentStatus === OrderStatus.FACTURADO && 
-        newStatus === OrderStatus.PENDIENTE_FACTURACION) {
-      return true;
-    }
+    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION && newStatus === OrderStatus.FACTURADO) return true;
+    if (currentStatus === OrderStatus.FACTURADO && newStatus === OrderStatus.PENDIENTE_FACTURACION) return true;
     return false;
   }
 
@@ -84,6 +65,7 @@ export const canChangeStatus = (
 
 /**
  * Obtiene los estados disponibles a los que se puede cambiar desde el estado actual
+ * según la matriz de permisos
  */
 export const getAvailableStatusTransitions = (
   role: UserRole,
@@ -97,37 +79,21 @@ export const getAvailableStatusTransitions = (
   ];
 
   if (role === 'Admin') {
-    // Admin puede cambiar a cualquier estado, incluyendo revertir desde Entregado
     return allStatuses.filter(s => s !== currentStatus);
   }
 
   const available: OrderStatus[] = [];
 
   if (role === 'Logística') {
-    if (currentStatus === OrderStatus.PENDIENTE_ARMADO) {
-      available.push(OrderStatus.PENDIENTE_FACTURACION);
-    }
-    // Logística puede revertir: Pendiente de Facturación -> Pendiente de Armado
-    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION) {
-      available.push(OrderStatus.PENDIENTE_ARMADO);
-    }
-    if (currentStatus === OrderStatus.FACTURADO) {
-      available.push(OrderStatus.ENTREGADO);
-    }
-    // Logística puede revertir: Entregado -> Facturado
-    if (currentStatus === OrderStatus.ENTREGADO) {
-      available.push(OrderStatus.FACTURADO);
-    }
+    if (currentStatus === OrderStatus.PENDIENTE_ARMADO) available.push(OrderStatus.PENDIENTE_FACTURACION);
+    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION) available.push(OrderStatus.PENDIENTE_ARMADO);
+    if (currentStatus === OrderStatus.FACTURADO) available.push(OrderStatus.ENTREGADO);
+    if (currentStatus === OrderStatus.ENTREGADO) available.push(OrderStatus.FACTURADO);
   }
 
   if (role === 'Facturación') {
-    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION) {
-      available.push(OrderStatus.FACTURADO);
-    }
-    // Facturación puede revertir: Facturado -> Pendiente de Facturación
-    if (currentStatus === OrderStatus.FACTURADO) {
-      available.push(OrderStatus.PENDIENTE_FACTURACION);
-    }
+    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION) available.push(OrderStatus.FACTURADO);
+    if (currentStatus === OrderStatus.FACTURADO) available.push(OrderStatus.PENDIENTE_FACTURACION);
   }
 
   return available;

@@ -2,17 +2,20 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { canAccessView, ViewKey } from '../utils/views';
+
+const NAV_ITEMS: { name: string; icon: string; path: string; view: ViewKey }[] = [
+  { name: 'Panel General', icon: 'dashboard', path: '/', view: 'dashboard' },
+  { name: 'Productos', icon: 'inventory_2', path: '/productos', view: 'products' },
+  { name: 'Clientes', icon: 'group', path: '/clientes', view: 'clients' },
+  { name: 'Pedidos', icon: 'shopping_cart', path: '/pedidos', view: 'orders' },
+  { name: 'Usuarios', icon: 'manage_accounts', path: '/usuarios', view: 'users' },
+  { name: 'Auditoría', icon: 'fact_check', path: '/auditoria', view: 'audit' },
+];
 
 const Sidebar: React.FC = () => {
   const { user } = useAuth();
-  const navItems = [
-    { name: 'Panel General', icon: 'dashboard', path: '/' },
-    { name: 'Productos', icon: 'inventory_2', path: '/productos' },
-    { name: 'Clientes', icon: 'group', path: '/clientes' },
-    { name: 'Pedidos', icon: 'shopping_cart', path: '/pedidos' },
-    { name: 'Usuarios', icon: 'manage_accounts', path: '/usuarios' },
-    { name: 'Auditoría', icon: 'fact_check', path: '/auditoria' },
-  ];
+  const navItems = user ? NAV_ITEMS.filter(item => canAccessView(user.role, item.view)) : [];
 
   return (
     <aside className="w-72 hidden md:flex flex-col bg-white dark:bg-[#1a2634] border-r border-slate-200 dark:border-slate-800 h-full flex-shrink-0 transition-all duration-300 z-20">

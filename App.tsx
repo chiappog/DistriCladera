@@ -8,6 +8,7 @@ import { ProductsProvider } from './contexts/ProductsContext';
 import { ClientsProvider } from './contexts/ClientsContext';
 import { UsersProvider } from './contexts/UsersContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ViewGuard from './components/ViewGuard';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Login from './views/Login';
@@ -65,8 +66,9 @@ const App: React.FC = () => {
                       path="/*"
                       element={
                         <ProtectedRoute>
-                          <Layout>
-                            <Routes>
+                          <ViewGuard>
+                            <Layout>
+                              <Routes>
                               <Route path="/" element={<Dashboard />} />
                               <Route path="/productos" element={<Products />} />
                               <Route path="/clientes" element={<Clients />} />
@@ -74,8 +76,9 @@ const App: React.FC = () => {
                               <Route path="/pedidos/:id" element={<OrderDetail />} />
                               <Route path="/usuarios" element={<Users />} />
                               <Route path="/auditoria" element={<Audit />} />
-                            </Routes>
-                          </Layout>
+                              </Routes>
+                            </Layout>
+                          </ViewGuard>
                         </ProtectedRoute>
                       }
                     />
