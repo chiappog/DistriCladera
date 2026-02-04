@@ -4,7 +4,7 @@ import { useClients } from '../contexts/ClientsContext';
 import { useProducts } from '../contexts/ProductsContext';
 import { useAuth } from '../hooks/useAuth';
 import { useAudit } from '../contexts/AuditContext';
-import { OrderStatus, OrderItem } from '../types';
+import { OrderStatus, OrderItem, Product } from '../types';
 
 interface NewOrderModalProps {
   isOpen: boolean;
@@ -22,6 +22,8 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
   const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [searchQueryByItem, setSearchQueryByItem] = useState<Record<number, string>>({});
+  const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -31,8 +33,25 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
       setOrderDate(new Date().toISOString().split('T')[0]);
       setOrderItems([]);
       setErrors({});
+      setSearchQueryByItem({});
+      setOpenDropdownIndex(null);
     }
   }, [isOpen]);
+
+  const getFilteredProducts = (query: string): Product[] => {
+    const term = query.trim().toLowerCase();
+    if (!term) return products;
+    return products.filter(
+      (p) =>
+        p.id.toLowerCase().includes(term) ||
+        p.name.toLowerCase().includes(term) ||
+        p.brand.toLowerCase().includes(term) ||
+        p.category.toLowerCase().includes(term)
+    );
+  };
+
+  const getProductLabel = (p: Product) =>
+    `${p.name} (${p.brand}) - $${p.price.toFixed(2)} / ${p.unit}`;
 
   const handleAddProduct = () => {
     setOrderItems([...orderItems, { productId: '', estimatedQuantity: 1, price: 0, unit: 'Unidad' }]);
@@ -265,21 +284,76 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
                   const product = products.find(p => p.id === item.productId);
                   return (
                     <div key={index} className="flex gap-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <div className="flex-1">
-                        <select
-                          value={item.productId}
-                          onChange={(e) => handleProductChange(index, 'productId', e.target.value)}
-                          className={`w-full px-3 py-2 bg-white dark:bg-slate-800 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-slate-900 dark:text-white ${
+                      <div className="flex-1 relative">
+                        <div
+                          className={`flex w-full items-center rounded-lg border bg-white dark:bg-slate-800 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary text-sm text-slate-900 dark:text-white ${
                             errors[`product_${index}`] ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                           }`}
                         >
-                          <option value="">Seleccionar producto...</option>
-                          {products.map((product) => (
-                            <option key={product.id} value={product.id}>
-                              {product.name} ({product.brand}) - ${product.price.toFixed(2)} / {product.unit}
-                            </option>
-                          ))}
-                        </select>
+                          <span className="pl-3 text-slate-400 material-symbols-outlined text-[20px]">search</span>
+                          <input
+                            type="text"
+                            value={
+                              searchQueryByItem[index] !== undefined && searchQueryByItem[index] !== ''
+                                ? searchQueryByItem[index]
+                                : item.productId && product
+                                  ? getProductLabel(product)
+                                  : ''
+                            }
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value.trim() && item.productId) {
+                                handleProductChange(index, 'productId', '');
+                              }
+                              setSearchQueryByItem((prev) => ({ ...prev, [index]: value }));
+                            }}
+                            onFocus={() => setOpenDropdownIndex(index)}
+                            onBlur={() => setTimeout(() => setOpenDropdownIndex(null), 200)}
+                            placeholder="Buscar por ID, nombre, marca o categoría..."
+                            className="w-full min-w-0 py-2 pr-3 pl-1 bg-transparent border-none focus:ring-0 focus:outline-none text-sm"
+                          />
+                        </div>
+                        {openDropdownIndex === index && (
+                          <div className="absolute top-full left-0 right-0 mt-1 z-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                            {(() => {
+                              const query = searchQueryByItem[index] ?? '';
+                              const filtered = getFilteredProducts(query);
+                              if (filtered.length === 0) {
+                                return (
+                                  <div className="px-3 py-4 text-sm text-slate-500 dark:text-slate-400 text-center">
+                                    {query.trim()
+                                      ? 'Ningún producto coincide con la búsqueda'
+                                      : 'Escribí para buscar productos'}
+                                  </div>
+                                );
+                              }
+                              return (
+                                <ul className="py-1">
+                                  {filtered.map((p) => (
+                                    <li key={p.id}>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          handleProductChange(index, 'productId', p.id);
+                                          setSearchQueryByItem((prev) => {
+                                            const next = { ...prev };
+                                            delete next[index];
+                                            return next;
+                                          });
+                                          setOpenDropdownIndex(null);
+                                          setErrors((prev) => ({ ...prev, [`product_${index}`]: '' }));
+                                        }}
+                                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                      >
+                                        {getProductLabel(p)}
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              );
+                            })()}
+                          </div>
+                        )}
                         {errors[`product_${index}`] && (
                           <p className="text-xs text-red-500 mt-1">{errors[`product_${index}`]}</p>
                         )}
