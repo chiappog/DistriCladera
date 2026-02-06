@@ -5,7 +5,8 @@ import { useProducts } from '../contexts/ProductsContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../hooks/useAuth';
 import { useAudit } from '../contexts/AuditContext';
-import { OrderStatus, Order } from '../types.ts';
+import { OrderStatus, Order } from '../types';
+import { ORDER_STATUSES } from '../config/businessRules';
 import NewOrderModal from '../components/NewOrderModal';
 import EditOrderModal from '../components/EditOrderModal';
 import StatusBadge from '../components/StatusBadge';
@@ -255,10 +256,11 @@ const Orders: React.FC = () => {
                 }}
               >
                 <option value="">Todos los estados</option>
-                <option value={OrderStatus.PENDIENTE_ARMADO}>Pendiente de Armado</option>
-                <option value={OrderStatus.PENDIENTE_FACTURACION}>Pendiente de Facturación</option>
-                <option value={OrderStatus.FACTURADO}>Facturado</option>
-                <option value={OrderStatus.ENTREGADO}>Entregado</option>
+                {ORDER_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
             </div>
           </label>

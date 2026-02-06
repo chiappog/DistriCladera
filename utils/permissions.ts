@@ -1,40 +1,46 @@
 import { UserRole, OrderStatus } from '../types';
+import {
+  ORDER_STATUSES,
+  STATUS_TRANSITIONS_BY_ROLE,
+  PERMISSIONS_MATRIX,
+} from '../config/businessRules';
 
 /**
  * Matriz de permisos - Crear pedido: Vendedor ✅, Logística ❌, Facturación ✅, Admin ✅
+ * Fuente: config/businessRules.ts
  */
 export const canCreateOrder = (role: UserRole): boolean => {
-  return role === 'Admin' || role === 'Vendedor' || role === 'Facturación';
+  return PERMISSIONS_MATRIX.createOrder.includes(role);
 };
 
 /**
  * Matriz de permisos - Editar pedido (no facturado): Vendedor ✅, Logística ✅, Facturación ❌, Admin ✅
+ * Fuente: config/businessRules.ts
  */
 export const canEditOrder = (role: UserRole, status: OrderStatus): boolean => {
   if (role === 'Admin') return true;
-  if (role === 'Facturación') return false;
-  if (role === 'Vendedor' || role === 'Logística') {
-    return status !== OrderStatus.FACTURADO && status !== OrderStatus.ENTREGADO;
+  if (PERMISSIONS_MATRIX.editOrderBlockedRoles.includes(role)) return false;
+  if (PERMISSIONS_MATRIX.editOrderAllowedRoles.includes(role)) {
+    return !PERMISSIONS_MATRIX.editOrderBlockedStatuses.includes(status);
   }
   return false;
 };
 
 /**
  * Matriz de permisos - Eliminar pedido (no facturado): Vendedor ✅, Logística ❌, Facturación ❌, Admin ✅
+ * Fuente: config/businessRules.ts
  */
 export const canDeleteOrder = (role: UserRole, status: OrderStatus): boolean => {
   if (role === 'Admin') return true;
-  if (role === 'Vendedor') {
-    return status !== OrderStatus.FACTURADO && status !== OrderStatus.ENTREGADO;
+  if (PERMISSIONS_MATRIX.deleteOrderAllowedRoles.includes(role)) {
+    return !PERMISSIONS_MATRIX.deleteOrderBlockedStatuses.includes(status);
   }
   return false;
 };
 
 /**
- * Matriz de permisos - Cambios de estado:
- * - Pendiente Facturación: Solo Logística, Admin
- * - Facturado: Solo Facturación, Admin
- * - Entregado: Solo Logística, Admin
+ * Matriz de permisos - Cambios de estado (ver STATUS_TRANSITIONS_BY_ROLE en businessRules)
+ * Fuente: config/businessRules.ts
  */
 export const canChangeStatus = (
   role: UserRole,
@@ -42,61 +48,25 @@ export const canChangeStatus = (
   newStatus: OrderStatus
 ): boolean => {
   if (role === 'Admin') return true;
-  if (role === 'Vendedor') return false;
-
-  // Logística: Pendiente Armado <-> Pendiente Facturación; Facturado <-> Entregado
-  if (role === 'Logística') {
-    if (currentStatus === OrderStatus.PENDIENTE_ARMADO && newStatus === OrderStatus.PENDIENTE_FACTURACION) return true;
-    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION && newStatus === OrderStatus.PENDIENTE_ARMADO) return true;
-    if (currentStatus === OrderStatus.FACTURADO && newStatus === OrderStatus.ENTREGADO) return true;
-    if (currentStatus === OrderStatus.ENTREGADO && newStatus === OrderStatus.FACTURADO) return true;
-    return false;
-  }
-
-  // Facturación: Solo Pendiente Facturación <-> Facturado
-  if (role === 'Facturación') {
-    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION && newStatus === OrderStatus.FACTURADO) return true;
-    if (currentStatus === OrderStatus.FACTURADO && newStatus === OrderStatus.PENDIENTE_FACTURACION) return true;
-    return false;
-  }
-
-  return false;
+  const transitions = STATUS_TRANSITIONS_BY_ROLE[role];
+  if (!transitions) return false;
+  const allowed = transitions[currentStatus];
+  return allowed !== undefined && allowed.includes(newStatus);
 };
 
 /**
  * Obtiene los estados disponibles a los que se puede cambiar desde el estado actual
- * según la matriz de permisos
+ * según la matriz de permisos. Fuente: config/businessRules.ts
  */
 export const getAvailableStatusTransitions = (
   role: UserRole,
   currentStatus: OrderStatus
 ): OrderStatus[] => {
-  const allStatuses = [
-    OrderStatus.PENDIENTE_ARMADO,
-    OrderStatus.PENDIENTE_FACTURACION,
-    OrderStatus.FACTURADO,
-    OrderStatus.ENTREGADO,
-  ];
-
   if (role === 'Admin') {
-    return allStatuses.filter(s => s !== currentStatus);
+    return ORDER_STATUSES.filter((s) => s !== currentStatus);
   }
-
-  const available: OrderStatus[] = [];
-
-  if (role === 'Logística') {
-    if (currentStatus === OrderStatus.PENDIENTE_ARMADO) available.push(OrderStatus.PENDIENTE_FACTURACION);
-    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION) available.push(OrderStatus.PENDIENTE_ARMADO);
-    if (currentStatus === OrderStatus.FACTURADO) available.push(OrderStatus.ENTREGADO);
-    if (currentStatus === OrderStatus.ENTREGADO) available.push(OrderStatus.FACTURADO);
-  }
-
-  if (role === 'Facturación') {
-    if (currentStatus === OrderStatus.PENDIENTE_FACTURACION) available.push(OrderStatus.FACTURADO);
-    if (currentStatus === OrderStatus.FACTURADO) available.push(OrderStatus.PENDIENTE_FACTURACION);
-  }
-
-  return available;
+  const transitions = STATUS_TRANSITIONS_BY_ROLE[role];
+  return transitions?.[currentStatus] ?? [];
 };
 
 /**
@@ -109,21 +79,24 @@ export const canChangeOrderStatus = (role: UserRole, currentStatus: OrderStatus)
 
 /**
  * Verifica si un rol puede marcar/desmarcar el checkbox de logística (artículo listo)
+ * Fuente: config/businessRules.ts
  */
 export const canToggleLogisticsCheck = (role: UserRole): boolean => {
-  return role === 'Logística' || role === 'Admin';
+  return PERMISSIONS_MATRIX.toggleLogisticsCheck.includes(role);
 };
 
 /**
  * Verifica si un rol puede marcar/desmarcar el checkbox de facturación (artículo facturado)
+ * Fuente: config/businessRules.ts
  */
 export const canToggleFacturacionCheck = (role: UserRole): boolean => {
-  return role === 'Facturación' || role === 'Admin';
+  return PERMISSIONS_MATRIX.toggleFacturacionCheck.includes(role);
 };
 
 /**
  * Verifica si un rol puede marcar/desmarcar el checkbox de admin (verificado)
+ * Fuente: config/businessRules.ts
  */
 export const canToggleAdminCheck = (role: UserRole): boolean => {
-  return role === 'Admin';
+  return PERMISSIONS_MATRIX.toggleAdminCheck.includes(role);
 };
