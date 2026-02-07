@@ -1,6 +1,6 @@
 # Análisis y plan de acción con enfoque metacognitivo
 
-**Última actualización:** 5 de febrero de 2025
+**Última actualización:** 6 de febrero de 2025
 
 Documento vivo de seguimiento del sistema de seguimiento de pedidos: análisis del sistema, relevamiento de estado actual, diseño del enfoque metacognitivo (curso/formación) y plan de acción en fases.
 
@@ -15,9 +15,9 @@ El sistema es una **plataforma administrativa** para la gestión de productos, c
 | Dimensión | Descripción |
 |-----------|-------------|
 | **Objetivos** | Gestión de pedidos diarios, catálogo de productos, cartera de clientes, usuarios por rol, trazabilidad de acciones (auditoría). |
-| **Actores** | Admin, Vendedor, Logística, Facturación (definidos en `types.ts`, matriz en `utils/views.ts`). |
+| **Actores** | Admin, Vendedor, Logística, Facturación (definidos en `types.ts`, matriz en `config/businessRules.ts`). |
 | **Flujo de acceso** | Login por selección de usuario (desde `constants.tsx`) → rutas protegidas por rol (`ProtectedRoute`, `ViewGuard`) → vistas según permisos: Dashboard, Productos, Clientes, Pedidos, Detalle de pedido, Usuarios (solo Admin), Auditoría (solo Admin). |
-| **Flujo de pedido** | Estados: Pendiente de Armado → Pendiente de Facturación → Facturado → Entregado. Transiciones restringidas por rol (`utils/permissions.ts`). Productos por KG exigen peso real antes de pasar a Pendiente de Facturación (`OrderDetail`, `OrdersContext`). |
+| **Flujo de pedido** | Estados: Pendiente de Armado → Pendiente de Facturación → Facturado → Entregado. Transiciones restringidas por rol (`config/businessRules.ts`). Productos por KG exigen peso real antes de pasar a Pendiente de Facturación. Reglas centralizadas en `docs/REGLAS-DE-NEGOCIO.md`. |
 
 ### 1.2 Flujo de estados del pedido y actores
 
@@ -51,7 +51,8 @@ stateDiagram-v2
 | Componentes UI | `components/` | Modales (pedido, cliente, producto, usuario, pesos, observaciones, cambio de estado), Header, Sidebar, StatusBadge, ProtectedRoute, ViewGuard. |
 | Contextos | `contexts/` | Auth, Orders, Products, Clients, Users, Audit. Estado global vía Context API. |
 | Hooks | `hooks/` | useAuth, usePermissions. |
-| Permisos y vistas | `utils/permissions.ts`, `utils/views.ts` | Matriz de permisos por acción (crear/editar/eliminar pedido, cambiar estado, checkboxes por área) y por vista. |
+| Permisos y vistas | `utils/permissions.ts`, `utils/views.ts` | API de permisos y vistas; consumen de `config/businessRules.ts`. |
+| Reglas de negocio | `config/businessRules.ts` | Fuente única de verdad: estados, transiciones, permisos, vistas, reglas de validación. |
 | Tipos | `types.ts` | Order, OrderStatus, OrderItem, Product, Client, User, UserRole, AuditEntry. |
 | Utilidades | `utils/csvExport.ts` | Exportación a CSV. |
 
@@ -61,7 +62,7 @@ stateDiagram-v2
 |------------|------------------|
 | **Persistencia** | No hay backend ni persistencia de pedidos, productos, clientes ni auditoría. Solo auth usa `localStorage` y se limpia al cargar (`AuthContext`). Los datos viven en estado React (`INITIAL_ORDERS`, etc. en `constants.tsx`). |
 | **API externa** | `GEMINI_API_KEY` en `vite.config.ts`; no se usa en la lógica de negocio. |
-| **Criterios de negocio** | Reglas de total estimado vs total real (solo Unidad en estimado; KG con peso en real), flujo de checkboxes (logística / facturación / admin) no están documentados en un único lugar. |
+| **Criterios de negocio** | Centralizados en `config/businessRules.ts` y documentados en `docs/REGLAS-DE-NEGOCIO.md`. Totales (estimado vs real), checkboxes y regla KG/peso en un solo lugar. |
 
 ### 1.5 Supuestos y restricciones
 
@@ -100,7 +101,7 @@ stateDiagram-v2
 |--------|---------|-----------|
 | Sin persistencia de pedidos, productos, clientes ni auditoría | Pérdida de datos al recargar; imposibilidad de uso serio en producción. | Alta |
 | Curso/formación inexistente | Usuarios no tienen apoyo para aprender a usar el sistema ni para autorregular su aprendizaje. | Media–Alta |
-| Documentación de negocio dispersa | Reglas de estados, permisos y flujos no están en un solo lugar; mantenimiento y onboarding costosos. | Alta |
+| ~~Documentación de negocio dispersa~~ | ~~Reglas de estados, permisos y flujos no están en un solo lugar~~. **Mitigada**: reglas centralizadas en `config/businessRules.ts` y `docs/REGLAS-DE-NEGOCIO.md`. | Alta (mitigada) |
 | README genérico (AI Studio / Gemini) | Confusión sobre el propósito real del proyecto. | Media |
 
 ### 2.4 Riesgos cognitivos
@@ -153,7 +154,7 @@ El curso o componente formativo (estado deseado) debe fomentar conciencia del pr
 
 | Fase | Objetivo | Entregables | Criterios de validación | Dependencias |
 |------|----------|-------------|--------------------------|--------------|
-| **F1** | Estabilizar y documentar el sistema actual | Documento de arquitectura y reglas de negocio (estados, permisos, flujos); este mismo .md como archivo vivo | Reglas de negocio trazables al código; documento actualizado con estado actual | Ninguna |
+| **F1** | Estabilizar y documentar el sistema actual | `docs/REGLAS-DE-NEGOCIO.md`, `config/businessRules.ts`, este mismo .md como archivo vivo | Reglas de negocio trazables al código; documento actualizado con estado actual | Ninguna |
 | **F2** | Reducir riesgos cognitivos en la UI | Mensajes claros de éxito/error, tooltips o microcopy en estados y checkboxes; opcional: checklist "Antes de facturar" | Usuario puede entender qué hace cada control sin documentación externa | F1 |
 | **F3** | Definir y diseñar el curso/componente formativo | Especificación del curso (objetivos por rol, unidades, actividades metacognitivas, métricas); wireframes o flujo si es in-app | Objetivos medibles; al menos una métrica de metacognición por unidad | F1, F2 |
 | **F4** | Implementar soporte de persistencia (si aplica) | Backend o capa de persistencia local; migración de datos de ejemplo | Pedidos y auditoría sobreviven a recarga; criterios de integridad definidos | F1 |
@@ -197,3 +198,4 @@ El curso o componente formativo (estado deseado) debe fomentar conciencia del pr
 | Fecha | Cambio | Autor |
 |-------|--------|-------|
 | 2025-02-05 | Creación del documento: análisis del sistema, relevamiento, enfoque metacognitivo, plan de acción en fases, autocrítica y registro de cambios. | Plan implementado |
+| 2025-02-06 | F1 (parcial): Centralización de reglas de negocio. Creados `config/businessRules.ts` y `docs/REGLAS-DE-NEGOCIO.md`. Refactorizados permissions, views, OrdersContext y componentes UI. Brecha 2.3 mitigada. | Plan implementado |

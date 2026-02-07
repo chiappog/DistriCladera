@@ -3,6 +3,7 @@ import { Order, OrderStatus, OrderItem } from '../types';
 import { useOrders } from '../contexts/OrdersContext';
 import { useClients } from '../contexts/ClientsContext';
 import { useProducts } from '../contexts/ProductsContext';
+import { ORDER_STATUSES } from '../config/businessRules';
 
 interface EditOrderModalProps {
   isOpen: boolean;
@@ -167,10 +168,11 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ isOpen, onClose, order,
                 onChange={(e) => setForm({ ...form, status: e.target.value as OrderStatus })}
                 className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-slate-900 dark:text-white"
               >
-                <option value={OrderStatus.PENDIENTE_ARMADO}>Pendiente de Armado</option>
-                <option value={OrderStatus.PENDIENTE_FACTURACION}>Pendiente de Facturación</option>
-                <option value={OrderStatus.FACTURADO}>Facturado</option>
-                <option value={OrderStatus.ENTREGADO}>Entregado</option>
+                {ORDER_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
