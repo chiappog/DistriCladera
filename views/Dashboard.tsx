@@ -150,7 +150,7 @@ const Dashboard: React.FC = () => {
           {canCreateOrder() && (
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-primary text-white hover:bg-blue-600 gap-2 text-sm font-bold shadow-md shadow-blue-500/20 transition-all"
+              className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-primary text-white hover:bg-primary-hover gap-2 text-sm font-bold shadow-md shadow-primary/20 transition-all"
             >
               <span className="material-symbols-outlined text-[20px] fill">add</span>
               <span className="whitespace-nowrap">Nuevo Pedido</span>

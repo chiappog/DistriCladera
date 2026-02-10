@@ -40,7 +40,7 @@ const OrderDetail: React.FC = () => {
         <p className="text-slate-500 dark:text-slate-400">El pedido {orderId} no existe.</p>
         <button
           onClick={() => navigate('/pedidos')}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
         >
           <span className="material-symbols-outlined">arrow_back</span>
           Volver a Pedidos
@@ -198,7 +198,7 @@ const OrderDetail: React.FC = () => {
           <button
             type="button"
             onClick={() => setEditOrderModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm font-medium"
           >
             <span className="material-symbols-outlined text-[18px]">edit</span>
             Editar pedido
@@ -249,7 +249,7 @@ const OrderDetail: React.FC = () => {
                   onClick={() => setOrderObservationsModalOpen(true)}
                   className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                     order.notes?.trim()
-                      ? 'bg-primary text-white hover:bg-blue-600 shadow-md shadow-primary/25 dark:shadow-primary/20'
+                      ? 'bg-primary text-white hover:bg-primary-hover shadow-md shadow-primary/25 dark:shadow-primary/20'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >

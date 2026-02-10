@@ -21,14 +21,13 @@ const Sidebar: React.FC = () => {
     <aside className="w-72 hidden md:flex flex-col bg-white dark:bg-[#1a2634] border-r border-slate-200 dark:border-slate-800 h-full flex-shrink-0 transition-all duration-300 z-20">
       <div className="flex flex-col h-full p-4 justify-between">
         <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-3 px-2">
-            <div className="bg-primary/10 flex items-center justify-center rounded-lg size-10">
-              <span className="material-symbols-outlined text-primary fill">local_shipping</span>
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-slate-900 dark:text-white text-base font-bold leading-tight">DistriCladera</h1>
-              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">Administración</p>
-            </div>
+          <div className="flex flex-col gap-2 p-4">
+            <img
+              src="/logo_color_solo_png.png"
+              alt="Logo de Cladera Distribuidora"
+              className="max-w-[200px] w-full h-auto object-contain"
+            />
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">Administración</p>
           </div>
           
           <nav className="flex flex-col gap-2">

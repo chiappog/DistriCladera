@@ -69,10 +69,13 @@ const Login: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="bg-white dark:bg-[#1a2634] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-8">
           <div className="text-center mb-8">
-            <div className="bg-primary/10 flex items-center justify-center rounded-lg size-16 mx-auto mb-4">
-              <span className="material-symbols-outlined text-primary fill text-4xl">local_shipping</span>
+            <div className="flex justify-center mb-4">
+              <img
+                src="/logo_color_solo_png.png"
+                alt="Logo de Cladera Distribuidora"
+                className="max-w-[200px] sm:max-w-[240px] w-full h-auto object-contain"
+              />
             </div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">DistriCladera</h1>
             <p className="text-slate-500 dark:text-slate-400">Sistema de Seguimiento de Pedidos</p>
           </div>
 
@@ -140,7 +143,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={!selectedUserId}
-              className="w-full px-4 py-3 rounded-lg bg-primary text-white hover:bg-blue-600 shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              className="w-full px-4 py-3 rounded-lg bg-primary text-white hover:bg-primary-hover shadow-md shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
             >
               Iniciar Sesión
             </button>

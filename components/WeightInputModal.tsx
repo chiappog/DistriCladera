@@ -290,7 +290,7 @@ const WeightInputModal: React.FC<WeightInputModalProps> = ({
           <button
             type="button"
             onClick={handleSubmit}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-blue-600 shadow-md shadow-blue-500/20 transition-all active:scale-95"
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover shadow-md shadow-primary/20 transition-all active:scale-95"
           >
             Confirmar Pesos y Continuar
           </button>

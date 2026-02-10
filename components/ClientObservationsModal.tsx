@@ -49,7 +49,7 @@ const ClientObservationsModal: React.FC<ClientObservationsModalProps> = ({
             <button
               type="button"
               onClick={handleEditarCliente}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm font-medium"
             >
               <span className="material-symbols-outlined text-[18px]">edit</span>
               Editar cliente

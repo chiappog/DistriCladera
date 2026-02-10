@@ -205,7 +205,7 @@ const Orders: React.FC = () => {
         {canCreateOrder() && (
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center justify-center rounded-lg h-10 px-5 bg-primary hover:bg-blue-600 text-white shadow-lg shadow-primary/30 transition-all gap-2 text-sm font-bold active:scale-95"
+            className="flex items-center justify-center rounded-lg h-10 px-5 bg-primary hover:bg-primary-hover text-white shadow-lg shadow-primary/30 transition-all gap-2 text-sm font-bold active:scale-95"
           >
             <span className="material-symbols-outlined text-[20px]">add</span>
             <span>Nuevo Pedido</span>
