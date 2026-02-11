@@ -335,7 +335,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({ isOpen, onClose, order,
           <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
             Cancelar
           </button>
-          <button onClick={handleSubmit} className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-blue-600 shadow-md shadow-blue-500/20 transition-all active:scale-95">
+          <button onClick={handleSubmit} className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover shadow-md shadow-primary/20 transition-all active:scale-95">
             Guardar Cambios
           </button>
         </div>

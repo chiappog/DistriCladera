@@ -158,7 +158,7 @@ const Users: React.FC = () => {
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-sm transition-all hover:shadow-md active:scale-95"
+          className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg shadow-sm transition-all hover:shadow-md active:scale-95"
         >
           <span className="material-symbols-outlined text-[20px]">add</span>
           <span className="font-semibold text-sm">Nuevo Usuario</span>

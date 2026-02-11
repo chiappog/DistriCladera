@@ -62,8 +62,13 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
 
   return (
     <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a2634] px-8 py-4 sticky top-0 z-10 transition-colors">
-      <div className="flex items-center gap-4">
-        <h2 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">
+      <div className="flex items-center gap-3 min-w-0">
+        <img
+          src="/logo_color_solo_png.png"
+          alt="Logo de Cladera Distribuidora"
+          className="md:hidden max-h-10 max-w-[140px] w-auto h-auto object-contain flex-shrink-0"
+        />
+        <h2 className="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight truncate">
           {title}
         </h2>
       </div>

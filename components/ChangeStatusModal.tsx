@@ -167,7 +167,7 @@ const ChangeStatusModal: React.FC<ChangeStatusModalProps> = ({
             <button
               type="submit"
               disabled={availableTransitions.length === 0 || !selectedStatus}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-blue-600 shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary-hover shadow-md shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cambiar Estado
             </button>
